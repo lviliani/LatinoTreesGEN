@@ -86,6 +86,10 @@ class GenDumper : public edm::EDAnalyzer {
       edm::InputTag GenParticlesCollection_;
       edm::InputTag mcLHEEventInfoTag_;
 
+      bool dumpWeights_;
+      
+      
+      
       TTree* myTree_;
       //---- lepton
       float pt_[10];
@@ -133,7 +137,8 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  GenJetCollection_       = iConfig.getParameter<edm::InputTag>("GenJetCollection");
  GenParticlesCollection_ = iConfig.getParameter<edm::InputTag>("GenParticlesCollection");
  mcLHEEventInfoTag_      = iConfig.getParameter<edm::InputTag>("mcLHEEventInfoTag");
-
+ dumpWeights_            = iConfig.getUntrackedParameter< bool >("dumpWeights",false);
+ 
  edm::Service<TFileService> fs ;
  myTree_ = fs -> make <TTree>("myTree","myTree");
 
@@ -149,7 +154,19 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("lheeta2", &lheeta_[1], "lheeta2/F");
  myTree_ -> Branch("lhephi1", &lhephi_[0], "lhephi1/F");
  myTree_ -> Branch("lhephi2", &lhephi_[1], "lhephi2/F");
-
+ myTree_ -> Branch("pt3", &pt_[2], "pt3/F");
+ myTree_ -> Branch("pt4", &pt_[3], "pt4/F");
+ myTree_ -> Branch("eta3", &eta_[2], "eta3/F");
+ myTree_ -> Branch("eta4", &eta_[3], "eta4/F");
+ myTree_ -> Branch("phi3", &phi_[2], "phi3/F");
+ myTree_ -> Branch("phi4", &phi_[3], "phi4/F");
+ myTree_ -> Branch("lhept3", &lhept_[2], "lhept3/F");
+ myTree_ -> Branch("lhept4", &lhept_[3], "lhept4/F");
+ myTree_ -> Branch("lheeta3", &lheeta_[2], "lheeta3/F");
+ myTree_ -> Branch("lheeta4", &lheeta_[3], "lheeta4/F");
+ myTree_ -> Branch("lhephi3", &lhephi_[2], "lhephi3/F");
+ myTree_ -> Branch("lhephi4", &lhephi_[3], "lhephi4/F");
+ 
  myTree_ -> Branch("njet", &njet_, "njet/I");
  myTree_ -> Branch("jetpt1", &jetpt_[0], "jetpt1/F");
  myTree_ -> Branch("jetpt2", &jetpt_[1], "jetpt2/F");
@@ -164,6 +181,7 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("jetphi3", &jetphi_[2], "jetphi3/F");
  myTree_ -> Branch("jetphi4", &jetphi_[3], "jetphi4/F");
 
+ 
  myTree_ -> Branch("lhejetpt1", &lhejetpt_[0], "lhejetpt1/F");
  myTree_ -> Branch("lhejetpt2", &lhejetpt_[1], "lhejetpt2/F");
  myTree_ -> Branch("lhejetpt3", &lhejetpt_[2], "lhejetpt3/F");
@@ -215,8 +233,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
  lhef::HEPEUP LHEhepeup = (*(productLHEHandle.product())).hepeup();
 
-//  njet_ = (*genJet).size();
- for (int i=0; i<2; i++) {
+ for (int i=0; i<4; i++) {
   pt_[i]  = 0;
   eta_[i]  = -99;
   phi_[i]  = -99;
@@ -255,7 +272,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  for (reco::GenParticleCollection::const_iterator genPart = genParticles->begin(); genPart != genParticles->end(); genPart++){
   int id = abs(genPart->pdgId());
   if (id == 11 || id == 13 || id == 15) { //---- e/mu/tau
-   if (itcount < 2) {
+   if (itcount < 4) {
     pt_[itcount]  = genPart->pt();
     eta_[itcount] = genPart->eta();
     phi_[itcount] = genPart->phi();
@@ -266,7 +283,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
  //---- LHE information ----
 
- for (int i=0; i<2; i++) {
+ for (int i=0; i<4; i++) {
   lhept_[i]  = 0;
   lheeta_[i] = -99;
   lhephi_[i] = -99;
@@ -318,7 +335,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                          LHEhepeup.PUP.at (iPart) [3] // E
                          ) ;
 
-    if (itcount < 2) {
+    if (itcount < 4) {
      lhept_[itcount]   = dummy.Pt();
      lheeta_[itcount]  = dummy.Eta();
      lhephi_[itcount]  = dummy.Phi();
@@ -330,55 +347,52 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
- //---- QCD scale
- std::vector<std::string> comments_LHE;
- std::vector<float> comments_LHE_weight;
- std::vector<float> comments_LHE_rfac;
- std::vector<float> comments_LHE_ffac;
-//---- mu mu weight
- std::map < std::pair<float, float>, float > weights;
-
- std::vector<std::string>::const_iterator it_end = (*(productLHEHandle.product())).comments_end();
- std::vector<std::string>::const_iterator it = (*(productLHEHandle.product())).comments_begin();
- for(; it != it_end; it++) {
-  comments_LHE.push_back (*it);
+ if (dumpWeights_) {
+  //---- QCD scale
+  std::vector<std::string> comments_LHE;
+  std::vector<float> comments_LHE_weight;
+  std::vector<float> comments_LHE_rfac;
+  std::vector<float> comments_LHE_ffac;
+  //---- mu mu weight
+  std::map < std::pair<float, float>, float > weights;
+  
+  std::vector<std::string>::const_iterator it_end = (*(productLHEHandle.product())).comments_end();
+  std::vector<std::string>::const_iterator it = (*(productLHEHandle.product())).comments_begin();
+  for(; it != it_end; it++) {
+   comments_LHE.push_back (*it);
+  }
+  
+  for (unsigned int iComm = 0; iComm<comments_LHE.size(); iComm++) {
+   /// #new weight,renfact,facfact,pdf1,pdf2 32.2346904790193 1.00000000000000 1.00000000000000 11000 11000 lha
+   std::stringstream line( comments_LHE.at(iComm) );
+   std::string dummy;
+   line >> dummy; // #new weight,renfact,facfact,pdf1,pdf2
+   line >> dummy;
+   float dummy_float;
+   line >> dummy_float; // 32.2346904790193
+   comments_LHE_weight.push_back(dummy_float);
+   float dummy_float_weight = dummy_float;
+   line >> dummy_float; // 1.00000000000000
+   comments_LHE_rfac.push_back(dummy_float);
+   float dummy_float_mu1 = dummy_float;
+   line >> dummy_float; // 1.00000000000000
+   comments_LHE_ffac.push_back(dummy_float);
+   float dummy_float_mu2 = dummy_float;
+   std::pair <float, float> mumu(dummy_float_mu1,dummy_float_mu2);
+   weights[mumu] = dummy_float_weight;
+  }
+  
+  w00_ = weights[std::pair<float, float>(0.5, 0.5)];
+  w10_ = weights[std::pair<float, float>(1.0, 0.5)];
+  w01_ = weights[std::pair<float, float>(0.5, 1.0)];
+  w12_ = weights[std::pair<float, float>(1.0, 2.0)];
+  w21_ = weights[std::pair<float, float>(2.0, 1.0)];
+  w22_ = weights[std::pair<float, float>(2.0, 2.0)];
+  w11_ = weights[std::pair<float, float>(1.0, 1.0)];
+  
  }
-
-//  std::cout << " comments_LHE.size() = " << comments_LHE.size() << std::endl;
- for (unsigned int iComm = 0; iComm<comments_LHE.size(); iComm++) {
-//   std::cout << " i=" << iComm << " :: " << comments_LHE.size() << " ==> " << comments_LHE.at(iComm) << std::endl;
-  /// #new weight,renfact,facfact,pdf1,pdf2 32.2346904790193 1.00000000000000 1.00000000000000 11000 11000 lha
-  std::stringstream line( comments_LHE.at(iComm) );
-  std::string dummy;
-  line >> dummy; // #new weight,renfact,facfact,pdf1,pdf2
-  line >> dummy;
-  float dummy_float;
-  line >> dummy_float; // 32.2346904790193
-  comments_LHE_weight.push_back(dummy_float);
-  float dummy_float_weight = dummy_float;
-// std::cout << dummy_float << std::endl;
-  line >> dummy_float; // 1.00000000000000
-  comments_LHE_rfac.push_back(dummy_float);
-  float dummy_float_mu1 = dummy_float;
-// std::cout << dummy_float << std::endl;
-  line >> dummy_float; // 1.00000000000000
-  comments_LHE_ffac.push_back(dummy_float);
-  float dummy_float_mu2 = dummy_float;
-// std::cout << dummy_float << std::endl;
-  std::pair <float, float> mumu(dummy_float_mu1,dummy_float_mu2);
-  weights[mumu] = dummy_float_weight;
-//   std::cout << " mu:mu:weight = " << dummy_float_mu1 << ":" << dummy_float_mu2 << ":" << dummy_float_weight << std::endl;
- }
-
- w00_ = weights[std::pair<float, float>(0.5, 0.5)];
- w10_ = weights[std::pair<float, float>(1.0, 0.5)];
- w01_ = weights[std::pair<float, float>(0.5, 1.0)];
- w12_ = weights[std::pair<float, float>(1.0, 2.0)];
- w21_ = weights[std::pair<float, float>(2.0, 1.0)];
- w22_ = weights[std::pair<float, float>(2.0, 2.0)];
- w11_ = weights[std::pair<float, float>(1.0, 1.0)];
-
-
+ 
+ 
  myTree_->Fill();
 }
 

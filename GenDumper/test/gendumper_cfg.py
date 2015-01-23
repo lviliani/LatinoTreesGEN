@@ -30,6 +30,7 @@ process.Analyzer = cms.EDAnalyzer('GenDumper',
      GenJetCollection       = cms.InputTag("ak5GenJets"),
      GenParticlesCollection = cms.InputTag("genParticles"),
      mcLHEEventInfoTag      = cms.InputTag("source"),
+     dumpWeights            = cms.untracked.bool(False)
 )
 
 
