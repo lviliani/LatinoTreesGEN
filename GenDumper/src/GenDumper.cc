@@ -57,6 +57,9 @@
 //---- TLorentzVector
 #include "TLorentzVector.h"
 
+//---- to get weights
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 //
 // class declaration
 //
@@ -109,6 +112,7 @@ class GenDumper : public edm::EDAnalyzer {
       float lhejetphi_[10];
 
       //---- MC qcd scale
+      std::vector <double> _weights;
       float w00_;
       float w01_;
       float w10_;
@@ -202,6 +206,8 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("w12", &w12_, "w12/F");
  myTree_ -> Branch("w21", &w21_, "w21/F");
  myTree_ -> Branch("w22", &w22_, "w22/F");
+ 
+ myTree_ -> Branch("weights", "std::vector<double>", &_weights);
 
 }
 
@@ -222,6 +228,9 @@ GenDumper::~GenDumper()
 // ------------ method called for each event  ------------
 void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
+ edm::Handle<GenEventInfoProduct> genEvtInfo;
+ iEvent.getByLabel( "generator", genEvtInfo );
+ 
  edm::Handle<reco::GenParticleCollection> genParticles;
  iEvent.getByLabel(GenParticlesCollection_,genParticles);
 
@@ -346,7 +355,13 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  }
 
 
-
+ std::vector<double> evtWeights = genEvtInfo->weights();
+//  double theWeight = genEvtInfo->weight();
+ 
+ for (unsigned int iWeight = 0; iWeight < evtWeights.size(); iWeight++) {
+  _weights.push_back(evtWeights.at(iWeight));
+ }
+ 
  if (dumpWeights_) {
   //---- QCD scale
   std::vector<std::string> comments_LHE;
