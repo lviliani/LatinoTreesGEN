@@ -113,6 +113,7 @@ class GenDumper : public edm::EDAnalyzer {
 
       //---- MC qcd scale
       std::vector <double> _weights;
+      double _weightSM;
       float w00_;
       float w01_;
       float w10_;
@@ -208,7 +209,9 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("w22", &w22_, "w22/F");
  
  myTree_ -> Branch("weights", "std::vector<double>", &_weights);
-
+ myTree_ -> Branch("weightSM", &_weightSM, "weightSM/F");
+ 
+ 
 }
 
 
@@ -356,7 +359,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
  std::vector<double> evtWeights = genEvtInfo->weights();
-//  double theWeight = genEvtInfo->weight();
+ _weightSM = genEvtInfo->weight();
  
  for (unsigned int iWeight = 0; iWeight < evtWeights.size(); iWeight++) {
   _weights.push_back(evtWeights.at(iWeight));
