@@ -90,7 +90,7 @@ class GenDumper : public edm::EDAnalyzer {
       edm::InputTag mcLHEEventInfoTag_;
       edm::InputTag genEvtInfoTag_;
       bool dumpWeights_;
-      
+      bool _debug;
       
       
       TTree* myTree_;
@@ -146,6 +146,8 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  mcLHEEventInfoTag_      = iConfig.getParameter<edm::InputTag>("mcLHEEventInfoTag");
  genEvtInfoTag_          = iConfig.getParameter<edm::InputTag>("genEvtInfoTag");
  dumpWeights_            = iConfig.getUntrackedParameter< bool >("dumpWeights",false);
+ _debug                  = iConfig.getUntrackedParameter< bool >("debug",false);
+ 
  
  edm::Service<TFileService> fs ;
  myTree_ = fs -> make <TTree>("myTree","myTree");
@@ -370,22 +372,21 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  _weightSM = genEvtInfo->weight();
  
  for (unsigned int iWeight = 0; iWeight < evtWeights.size(); iWeight++) {
-  std::cout << " evtWeights[" << iWeight << "] = " << evtWeights.at(iWeight) << std::endl;
+  if (_debug) std::cout << " evtWeights[" << iWeight << "] = " << evtWeights.at(iWeight) << std::endl;
   _weights.push_back(evtWeights.at(iWeight));
  }
- std::cout << " weightSM = " << _weightSM << std::endl;
+ if (_debug) std::cout << " weightSM = " << _weightSM << std::endl;
  
  
  unsigned int num_whichWeight = productLHEHandle->weights().size();
  for (unsigned int iWeight = 0; iWeight < num_whichWeight; iWeight++) {
   _weightsLHE.push_back( productLHEHandle->weights()[iWeight].wgt/productLHEHandle->originalXWGTUP() ); 
-  std::cout << " weightLHE[" << iWeight << "] = " << productLHEHandle->weights()[iWeight].wgt << std::endl;
+  if (_debug) std::cout << " weightLHE[" << iWeight << "] = " << productLHEHandle->weights()[iWeight].wgt << std::endl;
  }
  _weightNominalLHE = productLHEHandle->originalXWGTUP();
  
- std::cout << " weightNominalLHE = " << _weightNominalLHE << std::endl;
- 
- std::cout << " ---------- " << std::endl;
+ if (_debug) std::cout << " weightNominalLHE = " << _weightNominalLHE << std::endl;
+ if (_debug) std::cout << " ---------- " << std::endl;
  
  //---- old style weights, encoded in the "comments" with "#"
  if (dumpWeights_) {
