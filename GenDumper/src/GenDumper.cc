@@ -212,9 +212,9 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("w22", &w22_, "w22/F");
  
  myTree_ -> Branch("weightsLHE", "std::vector<double>", &_weightsLHE);
- myTree_ -> Branch("weightNominalLHE", &_weightNominalLHE, "weightNominalLHE/F");
+ myTree_ -> Branch("weightNominalLHE", &_weightNominalLHE, "weightNominalLHE/D");
  myTree_ -> Branch("weights", "std::vector<double>", &_weights);
- myTree_ -> Branch("weightSM", &_weightSM, "weightSM/F");
+ myTree_ -> Branch("weightSM", &_weightSM, "weightSM/D");
  
  
 }
@@ -370,16 +370,22 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  _weightSM = genEvtInfo->weight();
  
  for (unsigned int iWeight = 0; iWeight < evtWeights.size(); iWeight++) {
+  std::cout << " evtWeights[" << iWeight << "] = " << evtWeights.at(iWeight) << std::endl;
   _weights.push_back(evtWeights.at(iWeight));
  }
+ std::cout << " weightSM = " << _weightSM << std::endl;
  
  
  unsigned int num_whichWeight = productLHEHandle->weights().size();
  for (unsigned int iWeight = 0; iWeight < num_whichWeight; iWeight++) {
   _weightsLHE.push_back( productLHEHandle->weights()[iWeight].wgt/productLHEHandle->originalXWGTUP() ); 
+  std::cout << " weightLHE[" << iWeight << "] = " << productLHEHandle->weights()[iWeight].wgt << std::endl;
  }
  _weightNominalLHE = productLHEHandle->originalXWGTUP();
  
+ std::cout << " weightNominalLHE = " << _weightNominalLHE << std::endl;
+ 
+ std::cout << " ---------- " << std::endl;
  
  //---- old style weights, encoded in the "comments" with "#"
  if (dumpWeights_) {
