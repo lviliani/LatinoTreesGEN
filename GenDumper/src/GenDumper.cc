@@ -88,7 +88,7 @@ class GenDumper : public edm::EDAnalyzer {
       edm::InputTag GenJetCollection_;
       edm::InputTag GenParticlesCollection_;
       edm::InputTag mcLHEEventInfoTag_;
-
+      edm::InputTag genEvtInfoTag_;
       bool dumpWeights_;
       
       
@@ -142,6 +142,7 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  GenJetCollection_       = iConfig.getParameter<edm::InputTag>("GenJetCollection");
  GenParticlesCollection_ = iConfig.getParameter<edm::InputTag>("GenParticlesCollection");
  mcLHEEventInfoTag_      = iConfig.getParameter<edm::InputTag>("mcLHEEventInfoTag");
+ genEvtInfoTag_          = iConfig.getParameter<edm::InputTag>("genEvtInfoTag");
  dumpWeights_            = iConfig.getUntrackedParameter< bool >("dumpWeights",false);
  
  edm::Service<TFileService> fs ;
@@ -232,7 +233,7 @@ GenDumper::~GenDumper()
 void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
  edm::Handle<GenEventInfoProduct> genEvtInfo;
- iEvent.getByLabel( "generator", genEvtInfo );
+ iEvent.getByLabel( genEvtInfoTag_, genEvtInfo );
  
  edm::Handle<reco::GenParticleCollection> genParticles;
  iEvent.getByLabel(GenParticlesCollection_,genParticles);
