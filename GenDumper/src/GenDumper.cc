@@ -112,6 +112,8 @@ class GenDumper : public edm::EDAnalyzer {
       float lhejetphi_[10];
 
       //---- MC qcd scale
+      std::vector <double> _weightsLHE;
+      double _weightNominalLHE;
       std::vector <double> _weights;
       double _weightSM;
       float w00_;
@@ -209,6 +211,8 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("w21", &w21_, "w21/F");
  myTree_ -> Branch("w22", &w22_, "w22/F");
  
+ myTree_ -> Branch("weightsLHE", "std::vector<double>", &_weightsLHE);
+ myTree_ -> Branch("weightNominalLHE", &_weightNominalLHE, "weightNominalLHE/F");
  myTree_ -> Branch("weights", "std::vector<double>", &_weights);
  myTree_ -> Branch("weightSM", &_weightSM, "weightSM/F");
  
@@ -359,6 +363,9 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  }
 
 
+ //---- See https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideDataFormatGeneratorInterface
+ //---- weights: from EventInfo and from LHE
+ 
  std::vector<double> evtWeights = genEvtInfo->weights();
  _weightSM = genEvtInfo->weight();
  
@@ -366,6 +373,15 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   _weights.push_back(evtWeights.at(iWeight));
  }
  
+ 
+ unsigned int num_whichWeight = productLHEHandle->weights().size();
+ for (unsigned int iWeight = 0; iWeight < num_whichWeight; iWeight++) {
+  _weightsLHE.push_back( productLHEHandle->weights()[iWeight].wgt/productLHEHandle->originalXWGTUP() ); 
+ }
+ _weightNominalLHE = productLHEHandle->originalXWGTUP();
+ 
+ 
+ //---- old style weights, encoded in the "comments" with "#"
  if (dumpWeights_) {
   //---- QCD scale
   std::vector<std::string> comments_LHE;
