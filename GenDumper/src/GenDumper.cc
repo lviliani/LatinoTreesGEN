@@ -53,6 +53,7 @@
 
 //---- for LHE information
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 
 //---- TLorentzVector
 #include "TLorentzVector.h"
@@ -251,6 +252,45 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  iEvent.getByLabel(mcLHEEventInfoTag_, productLHEHandle);
 
  lhef::HEPEUP LHEhepeup = (*(productLHEHandle.product())).hepeup();
+
+ 
+ 
+//  const int nup_ = LHEhepeup.NUP; 
+//  const std::vector<int> idup_ = LHEhepeup.IDUP;
+//  const std::vector<lhef::HEPEUP::FiveVector> pup_ = LHEhepeup.PUP;
+//  
+//  std::cout << "Number of particles = " << nup_ << std::endl;
+//  
+//  if ( productLHEHandle->pdf() != NULL ) {
+//   std::cout << "PDF scale = " << std::setw(14) << std::fixed << productLHEHandle->pdf()->scalePDF << std::endl;  
+//   std::cout << "PDF 1 : id = " << std::setw(14) << std::fixed << productLHEHandle->pdf()->id.first 
+//   << " x = " << std::setw(14) << std::fixed << productLHEHandle->pdf()->x.first 
+//   << " xPDF = " << std::setw(14) << std::fixed << productLHEHandle->pdf()->xPDF.first << std::endl;  
+//   std::cout << "PDF 2 : id = " << std::setw(14) << std::fixed << productLHEHandle->pdf()->id.second 
+//   << " x = " << std::setw(14) << std::fixed << productLHEHandle->pdf()->x.second 
+//   << " xPDF = " << std::setw(14) << std::fixed << productLHEHandle->pdf()->xPDF.second << std::endl;  
+//  }
+//  
+//  for ( unsigned int icount = 0 ; icount < (unsigned int)nup_; icount++ ) {
+//   
+//   std::cout << "# " << std::setw(14) << std::fixed << icount 
+//   << std::setw(14) << std::fixed << idup_[icount] 
+//   << std::setw(14) << std::fixed << (pup_[icount])[0] 
+//   << std::setw(14) << std::fixed << (pup_[icount])[1] 
+//   << std::setw(14) << std::fixed << (pup_[icount])[2] 
+//   << std::setw(14) << std::fixed << (pup_[icount])[3] 
+//   << std::setw(14) << std::fixed << (pup_[icount])[4] 
+//   << std::endl;
+//  }
+//  if( productLHEHandle->weights().size() ) {
+//   std::cout << "weights:" << std::endl;
+//   for ( size_t iwgt = 0; iwgt < productLHEHandle->weights().size(); ++iwgt ) {
+//    const LHEEventProduct::WGT& wgt = productLHEHandle->weights().at(iwgt);
+//    std::cout << "\t" << wgt.id << ' ' 
+//    << std::scientific << wgt.wgt << std::endl;
+//   }
+//  }
+ 
 
  for (int i=0; i<4; i++) {
   pt_[i]  = 0;
@@ -502,9 +542,37 @@ GenDumper::endJob()
 }
 
 // ------------ method called when starting to processes a run  ------------
-void 
-GenDumper::beginRun(edm::Run const&, edm::EventSetup const&)
-{
+void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
+ edm::Handle<LHERunInfoProduct> run;
+//  LHERunInfoProduct        "externalLHEProducer"   ""                "LHE"     
+//  edmDumpEventContent  /tmp/amassiro/180BFD9B-CDD0-E411-9330-0CC47A13D09C.root --run 
+ 
+ iRun.getByLabel( "externalLHEProducer", run );
+ const lhef::HEPRUP thisHeprup_ = run->heprup();
+ std::cout << "HEPRUP \n" << std::endl;
+ std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.second << std::endl;
+ std::cout << "EBMUP " << std::setw(14) << std::fixed << thisHeprup_.EBMUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.EBMUP.second << std::endl;
+ std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.second << std::endl;
+ std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.second << std::endl;
+ std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup_.IDWTUP << std::endl;
+ std::cout << "NPRUP " << std::setw(14) << std::fixed << thisHeprup_.NPRUP << std::endl;
+ std::cout << " XSECUP " << std::setw(14) << std::fixed;
+ std::cout << " XERRUP " << std::setw(14) << std::fixed;
+ std::cout << " XMAXUP " << std::setw(14) << std::fixed;
+ std::cout << " LPRUP " << std::setw(14) << std::fixed << std::endl;
+ for ( unsigned int iSize = 0 ; iSize < thisHeprup_.XSECUP.size() ; iSize++ ) {
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.XSECUP[iSize];
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.XERRUP[iSize];
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.XMAXUP[iSize];
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.LPRUP[iSize];
+  std::cout << std::endl;
+ }
+ std::cout << " " << std::endl;
+ 
 }
 
 // ------------ method called when ending the processing of a run  ------------
