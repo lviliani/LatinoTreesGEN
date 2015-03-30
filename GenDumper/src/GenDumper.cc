@@ -545,35 +545,50 @@ GenDumper::endJob()
 
 // ------------ method called when starting to processes a run  ------------
 void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
-//  edm::Handle<LHERunInfoProduct> run;
+ edm::Handle<LHERunInfoProduct> run;
 //  LHERunInfoProduct        "externalLHEProducer"   ""                "LHE"     
 //  edmDumpEventContent  /tmp/amassiro/180BFD9B-CDD0-E411-9330-0CC47A13D09C.root --run 
  
-//  iRun.getByLabel( "externalLHEProducer", run );
-//  const lhef::HEPRUP thisHeprup_ = run->heprup();
-//  std::cout << "HEPRUP \n" << std::endl;
-//  std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.first;
-//  std::cout << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.second << std::endl;
-//  std::cout << "EBMUP " << std::setw(14) << std::fixed << thisHeprup_.EBMUP.first;
-//  std::cout << std::setw(14) << std::fixed << thisHeprup_.EBMUP.second << std::endl;
-//  std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.first;
-//  std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.second << std::endl;
-//  std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.first;
-//  std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.second << std::endl;
-//  std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup_.IDWTUP << std::endl;
-//  std::cout << "NPRUP " << std::setw(14) << std::fixed << thisHeprup_.NPRUP << std::endl;
-//  std::cout << " XSECUP " << std::setw(14) << std::fixed;
-//  std::cout << " XERRUP " << std::setw(14) << std::fixed;
-//  std::cout << " XMAXUP " << std::setw(14) << std::fixed;
-//  std::cout << " LPRUP " << std::setw(14) << std::fixed << std::endl;
-//  for ( unsigned int iSize = 0 ; iSize < thisHeprup_.XSECUP.size() ; iSize++ ) {
-//   std::cout << std::setw(14) << std::fixed << thisHeprup_.XSECUP[iSize];
-//   std::cout << std::setw(14) << std::fixed << thisHeprup_.XERRUP[iSize];
-//   std::cout << std::setw(14) << std::fixed << thisHeprup_.XMAXUP[iSize];
-//   std::cout << std::setw(14) << std::fixed << thisHeprup_.LPRUP[iSize];
-//   std::cout << std::endl;
-//  }
-//  std::cout << " " << std::endl;
+ typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
+ 
+ iRun.getByLabel( "externalLHEProducer", run );
+ 
+ LHERunInfoProduct myLHERunInfoProduct = *(run.product());
+ 
+ for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
+  std::cout << iter->tag() << std::endl;
+  std::vector<std::string> lines = iter->lines();
+  for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
+   std::cout << lines.at(iLine);
+  }
+ }
+ 
+ 
+ 
+ const lhef::HEPRUP thisHeprup_ = run->heprup();
+ std::cout << "HEPRUP \n" << std::endl;
+ std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.second << std::endl;
+ std::cout << "EBMUP " << std::setw(14) << std::fixed << thisHeprup_.EBMUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.EBMUP.second << std::endl;
+ std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.second << std::endl;
+ std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.first;
+ std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.second << std::endl;
+ std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup_.IDWTUP << std::endl;
+ std::cout << "NPRUP " << std::setw(14) << std::fixed << thisHeprup_.NPRUP << std::endl;
+ std::cout << " XSECUP " << std::setw(14) << std::fixed;
+ std::cout << " XERRUP " << std::setw(14) << std::fixed;
+ std::cout << " XMAXUP " << std::setw(14) << std::fixed;
+ std::cout << " LPRUP " << std::setw(14) << std::fixed << std::endl;
+ for ( unsigned int iSize = 0 ; iSize < thisHeprup_.XSECUP.size() ; iSize++ ) {
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.XSECUP[iSize];
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.XERRUP[iSize];
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.XMAXUP[iSize];
+  std::cout << std::setw(14) << std::fixed << thisHeprup_.LPRUP[iSize];
+  std::cout << std::endl;
+ }
+ std::cout << " " << std::endl;
  
  
  
