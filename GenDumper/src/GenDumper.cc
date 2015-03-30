@@ -579,14 +579,16 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
  
  
 //  edm::Handle< LHEXMLStringProduct > LHEAscii;
+//  
+// //  iRun.getByLabel(edm::InputTag('externalLHEProducer','LHEScriptOutput'),LHEAscii);
 //  iRun.getByLabel(mcLHEEventInfoTag_,LHEAscii);
- 
+//  
 //  const std::vector<std::string>& lheOutputs = LHEAscii->getStrings();
- 
+//  
 //  unsigned int iout = 0;
- 
+//  
 //  std::string lheFileName_ = "ciao.txt";
- 
+//  
 //  size_t lastdot = lheFileName_.find_last_of(".");
 //  std::string basename = lheFileName_.substr(0, lastdot);
 //  std::string extension = lastdot != std::string::npos ?  lheFileName_.substr(lastdot+1, std::string::npos) : "";
