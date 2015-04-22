@@ -104,7 +104,9 @@ class GenDumper : public edm::EDAnalyzer {
       float lhept_[10];
       float lheeta_[10];
       float lhephi_[10];
-
+      std::vector<float> _std_vector_leptonGen_pt;
+      
+      
       //---- jets
       int njet_;
       float jetpt_[10];
@@ -179,6 +181,9 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("lheeta4", &lheeta_[3], "lheeta4/F");
  myTree_ -> Branch("lhephi3", &lhephi_[2], "lhephi3/F");
  myTree_ -> Branch("lhephi4", &lhephi_[3], "lhephi4/F");
+ 
+ myTree_ -> Branch("std_vector_leptonGen_pt", "std::vector<float>", &_std_vector_leptonGen_pt);
+ 
  
  myTree_ -> Branch("njet", &njet_, "njet/I");
  myTree_ -> Branch("jetpt1", &jetpt_[0], "jetpt1/F");
@@ -293,7 +298,10 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 //   }
 //  }
  
-
+ for (int i=0; i<10; i++) { 
+  _std_vector_leptonGen_pt.push_back( -9999.9 );
+ }
+ 
  for (int i=0; i<4; i++) {
   pt_[i]  = 0;
   eta_[i]  = -99;
@@ -333,6 +341,9 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  for (reco::GenParticleCollection::const_iterator genPart = genParticles->begin(); genPart != genParticles->end(); genPart++){
   int id = abs(genPart->pdgId());
   if (id == 11 || id == 13 || id == 15) { //---- e/mu/tau
+   if (itcount < 10) {
+    _std_vector_leptonGen_pt.at(itcount) = genPart->pt();
+   }
    if (itcount < 4) {
     pt_[itcount]  = genPart->pt();
     eta_[itcount] = genPart->eta();
@@ -562,7 +573,6 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
    std::cout << lines.at(iLine);
   }
  }
- 
  
  
  const lhef::HEPRUP thisHeprup_ = run->heprup();
