@@ -32,7 +32,7 @@ if __name__ == '__main__':
     from CRABAPI.RawCommand import crabCommand
 
     # Make sure you set this parameter (here or above in the config it does not matter)
-    config.General.workArea = 'crab_projects_28Apr'
+    config.General.workArea = 'crab_projects_29Apr'
 
     def submit(config):
         res = crabCommand('submit', config = config)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     submit(config)
 
     config.General.requestName = 'aMCatNLO'
-    config.Data.inputDataset = '/GluGluHToWWTo2L2Nu_M125_13TeV_powheg_pythia8/RunIIWinter15GenOnly-MCRUN2_71_V1-v1/GEN'
+    config.Data.inputDataset = '/GluGluHToWWTo2L2Nu_M125_13TeV_amcatnloFXFX_pythia8/RunIIWinter15GenOnly-MCRUN2_71_V1-v1/GEN'
     config.JobType.pyCfgParams = list(pyCfgParams)
     #config.JobType.pyCfgParams.extend(['label=DYll', 'id=12345', 'scale=1.23'])
     submit(config)
