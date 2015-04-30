@@ -27,6 +27,7 @@ Plot:
 
     r99t /tmp/amassiro/amcatnlo_dump_tree.root /tmp/amassiro/powheg_dump_tree.root DrawCompare.cxx\(\"pt1\",100,0,100\)
     r99t /tmp/amassiro/amcatnlo_dump_tree.root /tmp/amassiro/powheg_dump_tree.root DrawCompare.cxx\(\"njet\",6,0,6\)
-
+    r99t /tmp/amassiro/amcatnlo_dump_tree.root /tmp/amassiro/powheg_dump_tree.root DrawCompare.cxx\(\"pt2\",100,0,100\)
+    r99t /tmp/amassiro/amcatnlo_dump_tree.root /tmp/amassiro/powheg_dump_tree.root DrawCompare.cxx\(\"lhept1\",100,0,100\)
     
     
