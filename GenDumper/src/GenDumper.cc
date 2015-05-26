@@ -298,6 +298,8 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 //   }
 //  }
  
+ 
+ _std_vector_leptonGen_pt.clear();
  for (int i=0; i<10; i++) { 
   _std_vector_leptonGen_pt.push_back( -9999.9 );
  }
@@ -424,13 +426,14 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  std::vector<double> evtWeights = genEvtInfo->weights();
  _weightSM = genEvtInfo->weight();
  
+ _weights.clear();
  for (unsigned int iWeight = 0; iWeight < evtWeights.size(); iWeight++) {
   if (_debug) std::cout << " evtWeights[" << iWeight << "] = " << evtWeights.at(iWeight) << std::endl;
   _weights.push_back(evtWeights.at(iWeight));
  }
  if (_debug) std::cout << " weightSM = " << _weightSM << std::endl;
  
- 
+ _weightsLHE.clear();
  unsigned int num_whichWeight = productLHEHandle->weights().size();
  for (unsigned int iWeight = 0; iWeight < num_whichWeight; iWeight++) {
   _weightsLHE.push_back( productLHEHandle->weights()[iWeight].wgt/productLHEHandle->originalXWGTUP() ); 
