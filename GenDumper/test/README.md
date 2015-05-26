@@ -23,7 +23,9 @@ run on test file:
                               
     xrdcp root://xrootd.unl.edu//store/mc/RunIISpring15DR74/WWTo2L2Nu_13TeV-powheg/MINIAODSIM/Asympt50ns_MCRUN2_74_V9A-v1/60000/0AA28275-5001-E511-8A45-0CC47A4DEDE0.root /tmp/amassiro/
     cmsRun gendumper_cfg.py   inputFiles=file:/tmp/amassiro/0AA28275-5001-E511-8A45-0CC47A4DEDE0.root \
-                              outputFile=/tmp/amassiro/WW_50ns.root      
+                              outputFile=/tmp/amassiro/WW_50ns.root      \
+                              isMiniAod=True
+    
     
     
 Plot:

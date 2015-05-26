@@ -4,6 +4,13 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('analysis')
 
 # add a list of strings for events to process
+options.register ('isMiniAod',
+                  False,
+                  VarParsing.multiplicity.singleton,
+                  VarParsing.varType.bool,
+                  "is miniAod? (default = False). It changes the collection names")
+
+
 options.parseArguments()
 
 
@@ -27,18 +34,27 @@ process.TFileService = cms.Service("TFileService",
       closeFileFast = cms.untracked.bool(True)
 )
 
-process.Analyzer = cms.EDAnalyzer('GenDumper',
-     #GenJetCollection       = cms.InputTag("ak5GenJets"),
+if options.isMiniAod :
+  process.Analyzer = cms.EDAnalyzer('GenDumper',
      GenJetCollection       = cms.InputTag("slimmedGenJets"),  # -> to run on miniAod
-     #GenParticlesCollection = cms.InputTag("genParticles"),
      GenParticlesCollection = cms.InputTag("prunedGenParticles"),  # -> to run on miniAod
      mcLHEEventInfoTag      = cms.InputTag("externalLHEProducer"),
      #mcLHEEventInfoTag      = cms.InputTag("source"),
      genEvtInfoTag          = cms.InputTag("generator"), 
      dumpWeights            = cms.untracked.bool(False),
      debug                  = cms.untracked.bool(False)
-)
-
+  )
+else :
+  process.Analyzer = cms.EDAnalyzer('GenDumper',
+     GenJetCollection       = cms.InputTag("ak5GenJets"),
+     GenParticlesCollection = cms.InputTag("genParticles"),
+     mcLHEEventInfoTag      = cms.InputTag("externalLHEProducer"),
+     #mcLHEEventInfoTag      = cms.InputTag("source"),
+     genEvtInfoTag          = cms.InputTag("generator"), 
+     dumpWeights            = cms.untracked.bool(False),
+     debug                  = cms.untracked.bool(False)
+  )
+ 
 
 
 process.p = cms.Path(process.Analyzer)
