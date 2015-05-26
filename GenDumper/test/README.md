@@ -5,6 +5,11 @@ copy test file:
 
     cp  /afs/cern.ch/user/g/govoni/work/public/HIG-RunIIWinter15GenOnly-00001_60.root /tmp/amassiro/
     
+options:
+
+    isMiniAod
+        True or False. It changes the input collections used
+    
 run on test file:
 
     cmsRun gendumper_cfg.py   inputFiles=file:/tmp/amassiro/HIG-RunIIWinter15GenOnly-00001_60.root       outputFile=/tmp/amassiro/HIG-RunIIWinter15GenOnly_dump_tree.root
