@@ -28,8 +28,10 @@ process.TFileService = cms.Service("TFileService",
 )
 
 process.Analyzer = cms.EDAnalyzer('GenDumper',
-     GenJetCollection       = cms.InputTag("ak5GenJets"),
-     GenParticlesCollection = cms.InputTag("genParticles"),
+     #GenJetCollection       = cms.InputTag("ak5GenJets"),
+     GenJetCollection       = cms.InputTag("slimmedGenJets"),  # -> to run on miniAod
+     #GenParticlesCollection = cms.InputTag("genParticles"),
+     GenParticlesCollection = cms.InputTag("prunedGenParticles"),  # -> to run on miniAod
      mcLHEEventInfoTag      = cms.InputTag("externalLHEProducer"),
      #mcLHEEventInfoTag      = cms.InputTag("source"),
      genEvtInfoTag          = cms.InputTag("generator"), 
