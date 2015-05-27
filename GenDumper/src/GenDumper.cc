@@ -102,6 +102,7 @@ class GenDumper : public edm::EDAnalyzer {
       float pt_[10];
       float eta_[10];
       float phi_[10];
+      float status_[10];
       float lhepdgid_[10];
       float lhept_[10];
       float lheeta_[10];
@@ -192,6 +193,11 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("pdgid2", &pdgid_[1], "pdgid2/F");
  myTree_ -> Branch("pdgid3", &pdgid_[2], "pdgid3/F");
  myTree_ -> Branch("pdgid4", &pdgid_[3], "pdgid4/F");
+ 
+ myTree_ -> Branch("status1", &status_[0], "status1/F");
+ myTree_ -> Branch("status2", &status_[1], "status2/F");
+ myTree_ -> Branch("status3", &status_[2], "status3/F");
+ myTree_ -> Branch("status4", &status_[3], "status4/F");
  
  myTree_ -> Branch("lhepdgid1", &lhepdgid_[0], "lhepdgid1/F");
  myTree_ -> Branch("lhepdgid2", &lhepdgid_[1], "lhepdgid2/F");
@@ -346,6 +352,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   eta_[i]  = -99;
   phi_[i]  = -99;
   pdgid_[i]  = 0;
+  status_[i]  = 0;
   nu_pt_[i]  = 0;
   nu_eta_[i]  = -99;
   nu_phi_[i]  = -99;
@@ -393,6 +400,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     eta_[itcount]   = genPart->eta();
     phi_[itcount]   = genPart->phi();
     pdgid_[itcount] = id;
+    status_[itcount] = genPart->status();
    }
    itcount++;
   }
