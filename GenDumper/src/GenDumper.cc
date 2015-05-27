@@ -98,20 +98,29 @@ class GenDumper : public edm::EDAnalyzer {
       
       TTree* myTree_;
       //---- lepton
-      float pdgid_[10];
+      int pdgid_[10];
       float pt_[10];
       float eta_[10];
       float phi_[10];
-      float status_[10];
-      float lhepdgid_[10];
+      int status_[10];
+
+      std::vector<float> _std_vector_leptonGen_pt;
+      
+      
+      int lhepdgid_[10];
       float lhept_[10];
       float lheeta_[10];
       float lhephi_[10];
-      std::vector<float> _std_vector_leptonGen_pt;
+      
+      int nu_pdgid_[10];
       float nu_pt_[10];
       float nu_eta_[10];
       float nu_phi_[10];
-      int nu_pdgid_[10];
+      
+      int nu_lhepdgid_[10];
+      float nu_lhept_[10];
+      float nu_lheeta_[10];
+      float nu_lhephi_[10]; 
       
       
       //---- jets
@@ -194,15 +203,15 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("pdgid3", &pdgid_[2], "pdgid3/F");
  myTree_ -> Branch("pdgid4", &pdgid_[3], "pdgid4/F");
  
- myTree_ -> Branch("status1", &status_[0], "status1/F");
- myTree_ -> Branch("status2", &status_[1], "status2/F");
- myTree_ -> Branch("status3", &status_[2], "status3/F");
- myTree_ -> Branch("status4", &status_[3], "status4/F");
+ myTree_ -> Branch("status1", &status_[0], "status1/I");
+ myTree_ -> Branch("status2", &status_[1], "status2/I");
+ myTree_ -> Branch("status3", &status_[2], "status3/I");
+ myTree_ -> Branch("status4", &status_[3], "status4/I");
  
- myTree_ -> Branch("lhepdgid1", &lhepdgid_[0], "lhepdgid1/F");
- myTree_ -> Branch("lhepdgid2", &lhepdgid_[1], "lhepdgid2/F");
- myTree_ -> Branch("lhepdgid3", &lhepdgid_[2], "lhepdgid3/F");
- myTree_ -> Branch("lhepdgid4", &lhepdgid_[3], "lhepdgid4/F");
+ myTree_ -> Branch("lhepdgid1", &lhepdgid_[0], "lhepdgid1/I");
+ myTree_ -> Branch("lhepdgid2", &lhepdgid_[1], "lhepdgid2/I");
+ myTree_ -> Branch("lhepdgid3", &lhepdgid_[2], "lhepdgid3/I");
+ myTree_ -> Branch("lhepdgid4", &lhepdgid_[3], "lhepdgid4/I");
  
  myTree_ -> Branch("nu_pt1", &nu_pt_[0], "nu_pt1/F");
  myTree_ -> Branch("nu_pt2", &nu_pt_[1], "nu_pt2/F");
@@ -224,6 +233,26 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("nu_pdgid3", &nu_pdgid_[2], "nu_pdgid3/F");
  myTree_ -> Branch("nu_pdgid4", &nu_pdgid_[3], "nu_pdgid4/F");
  
+ 
+ myTree_ -> Branch("nu_lhept1", &nu_lhept_[0], "nu_lhept1/F");
+ myTree_ -> Branch("nu_lhept2", &nu_lhept_[1], "nu_lhept2/F");
+ myTree_ -> Branch("nu_lheeta1", &nu_lheeta_[0], "nu_lheeta1/F");
+ myTree_ -> Branch("nu_lheeta2", &nu_lheeta_[1], "nu_lheeta2/F");
+ myTree_ -> Branch("nu_lhephi1", &nu_lhephi_[0], "nu_lhephi1/F");
+ myTree_ -> Branch("nu_lhephi2", &nu_lhephi_[1], "nu_lhephi2/F");
+ 
+ 
+ myTree_ -> Branch("nu_lhepdgid1", &nu_lhepdgid_[0], "nu_lhepdgid1/I");
+ myTree_ -> Branch("nu_lhepdgid2", &nu_lhepdgid_[1], "nu_lhepdgid2/I");
+ myTree_ -> Branch("nu_lhepdgid3", &nu_lhepdgid_[2], "nu_lhepdgid3/I");
+ myTree_ -> Branch("nu_lhepdgid4", &nu_lhepdgid_[3], "nu_lhepdgid4/I");
+ 
+ myTree_ -> Branch("nu_lhept3", &nu_lhept_[2], "nu_lhept3/F");
+ myTree_ -> Branch("nu_lhept4", &nu_lhept_[3], "nu_lhept4/F");
+ myTree_ -> Branch("nu_lheeta3", &nu_lheeta_[2], "nu_lheeta3/F");
+ myTree_ -> Branch("nu_lheeta4", &nu_lheeta_[3], "nu_lheeta4/F");
+ myTree_ -> Branch("nu_lhephi3", &nu_lhephi_[2], "nu_lhephi3/F");
+ myTree_ -> Branch("nu_lhephi4", &nu_lhephi_[3], "nu_lhephi4/F");
  
  myTree_ -> Branch("std_vector_leptonGen_pt", "std::vector<float>", &_std_vector_leptonGen_pt);
  
@@ -389,6 +418,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
  //---- gen leptons
  itcount = 0;
+ int nu_itcount = 0;
  for (reco::GenParticleCollection::const_iterator genPart = genParticles->begin(); genPart != genParticles->end(); genPart++){
   int id = abs(genPart->pdgId());
   if (id == 11 || id == 13 || id == 15) { //---- e/mu/tau
@@ -399,10 +429,22 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     pt_[itcount]    = genPart->pt();
     eta_[itcount]   = genPart->eta();
     phi_[itcount]   = genPart->phi();
-    pdgid_[itcount] = id;
+    pdgid_[itcount] = genPart->pdgId();
     status_[itcount] = genPart->status();
    }
    itcount++;
+  }
+  if (id == 12 || id == 14 || id == 16) { //---- neutrino: e/mu/tau
+   //if (nu_itcount < 10) {
+   // _std_vector_leptonGen_pt.at(nu_itcount) = genPart->pt();
+   //}
+   if (nu_itcount < 4) {
+    nu_pt_[nu_itcount]    = genPart->pt();
+    nu_eta_[nu_itcount]   = genPart->eta();
+    nu_phi_[nu_itcount]   = genPart->phi();
+    nu_pdgid_[nu_itcount] = genPart->pdgId();
+   }
+   nu_itcount++;
   }
  }
 
@@ -413,6 +455,11 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   lheeta_[i] = -99;
   lhephi_[i] = -99;
   lhepdgid_[i]  = 0;
+  
+  nu_lhept_[i]  = 0;
+  nu_lheeta_[i] = -99;
+  nu_lhephi_[i] = -99;
+  nu_lhepdgid_[i]  = 0;
  }
 
  for (int i=0; i<4; i++) {
@@ -447,6 +494,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
  itcount = 0;
+ nu_itcount = 0; 
  // loop over particles in the event
  for (unsigned int iPart = 0 ; iPart < LHEhepeup.IDUP.size (); ++iPart) {
   // outgoing particles
@@ -465,10 +513,28 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      lhept_[itcount]    = dummy.Pt();
      lheeta_[itcount]   = dummy.Eta();
      lhephi_[itcount]   = dummy.Phi();
-     lhepdgid_[itcount] = type;
+     lhepdgid_[itcount] = (LHEhepeup.IDUP.at (iPart));
     }
     itcount++;
    }
+   
+   if (type == 12 || type == 14 || type == 16) { // neutrino e/mu/tau
+    TLorentzVector dummy (
+     LHEhepeup.PUP.at (iPart) [0], // px
+                          LHEhepeup.PUP.at (iPart) [1], // py
+                          LHEhepeup.PUP.at (iPart) [2], // pz
+                          LHEhepeup.PUP.at (iPart) [3] // E
+    ) ;
+    
+    if (nu_itcount < 4) {
+     nu_lhept_[nu_itcount]    = dummy.Pt();
+     nu_lheeta_[nu_itcount]   = dummy.Eta();
+     nu_lhephi_[nu_itcount]   = dummy.Phi();
+     nu_lhepdgid_[nu_itcount] = (LHEhepeup.IDUP.at (iPart));
+    }
+    nu_itcount++;
+   }
+   
   }
  }
 
