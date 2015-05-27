@@ -98,13 +98,19 @@ class GenDumper : public edm::EDAnalyzer {
       
       TTree* myTree_;
       //---- lepton
+      float pdgid_[10];
       float pt_[10];
       float eta_[10];
       float phi_[10];
+      float lhepdgid_[10];
       float lhept_[10];
       float lheeta_[10];
       float lhephi_[10];
       std::vector<float> _std_vector_leptonGen_pt;
+      float nu_pt_[10];
+      float nu_eta_[10];
+      float nu_phi_[10];
+      int nu_pdgid_[10];
       
       
       //---- jets
@@ -181,6 +187,37 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("lheeta4", &lheeta_[3], "lheeta4/F");
  myTree_ -> Branch("lhephi3", &lhephi_[2], "lhephi3/F");
  myTree_ -> Branch("lhephi4", &lhephi_[3], "lhephi4/F");
+
+ myTree_ -> Branch("pdgid1", &pdgid_[0], "pdgid1/F");
+ myTree_ -> Branch("pdgid2", &pdgid_[1], "pdgid2/F");
+ myTree_ -> Branch("pdgid3", &pdgid_[2], "pdgid3/F");
+ myTree_ -> Branch("pdgid4", &pdgid_[3], "pdgid4/F");
+ 
+ myTree_ -> Branch("lhepdgid1", &lhepdgid_[0], "lhepdgid1/F");
+ myTree_ -> Branch("lhepdgid2", &lhepdgid_[1], "lhepdgid2/F");
+ myTree_ -> Branch("lhepdgid3", &lhepdgid_[2], "lhepdgid3/F");
+ myTree_ -> Branch("lhepdgid4", &lhepdgid_[3], "lhepdgid4/F");
+ 
+ myTree_ -> Branch("nu_pt1", &nu_pt_[0], "nu_pt1/F");
+ myTree_ -> Branch("nu_pt2", &nu_pt_[1], "nu_pt2/F");
+ myTree_ -> Branch("nu_pt3", &nu_pt_[2], "nu_pt3/F");
+ myTree_ -> Branch("nu_pt4", &nu_pt_[3], "nu_pt4/F");
+
+ myTree_ -> Branch("nu_eta1", &nu_eta_[0], "nu_eta1/F");
+ myTree_ -> Branch("nu_eta2", &nu_eta_[1], "nu_eta2/F");
+ myTree_ -> Branch("nu_eta3", &nu_eta_[2], "nu_eta3/F");
+ myTree_ -> Branch("nu_eta4", &nu_eta_[3], "nu_eta4/F");
+ 
+ myTree_ -> Branch("nu_phi1", &nu_phi_[0], "nu_phi1/F");
+ myTree_ -> Branch("nu_phi2", &nu_phi_[1], "nu_phi2/F");
+ myTree_ -> Branch("nu_phi3", &nu_phi_[2], "nu_phi3/F");
+ myTree_ -> Branch("nu_phi4", &nu_phi_[3], "nu_phi4/F");
+ 
+ myTree_ -> Branch("nu_pdgid1", &nu_pdgid_[0], "nu_pdgid1/F");
+ myTree_ -> Branch("nu_pdgid2", &nu_pdgid_[1], "nu_pdgid2/F");
+ myTree_ -> Branch("nu_pdgid3", &nu_pdgid_[2], "nu_pdgid3/F");
+ myTree_ -> Branch("nu_pdgid4", &nu_pdgid_[3], "nu_pdgid4/F");
+ 
  
  myTree_ -> Branch("std_vector_leptonGen_pt", "std::vector<float>", &_std_vector_leptonGen_pt);
  
@@ -308,6 +345,11 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   pt_[i]  = 0;
   eta_[i]  = -99;
   phi_[i]  = -99;
+  pdgid_[i]  = 0;
+  nu_pt_[i]  = 0;
+  nu_eta_[i]  = -99;
+  nu_phi_[i]  = -99;
+  nu_pdgid_[i]  = 0;
  }
 
   for (int i=0; i<4; i++) {
@@ -347,9 +389,10 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     _std_vector_leptonGen_pt.at(itcount) = genPart->pt();
    }
    if (itcount < 4) {
-    pt_[itcount]  = genPart->pt();
-    eta_[itcount] = genPart->eta();
-    phi_[itcount] = genPart->phi();
+    pt_[itcount]    = genPart->pt();
+    eta_[itcount]   = genPart->eta();
+    phi_[itcount]   = genPart->phi();
+    pdgid_[itcount] = id;
    }
    itcount++;
   }
@@ -361,6 +404,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   lhept_[i]  = 0;
   lheeta_[i] = -99;
   lhephi_[i] = -99;
+  lhepdgid_[i]  = 0;
  }
 
  for (int i=0; i<4; i++) {
@@ -410,9 +454,10 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                          ) ;
 
     if (itcount < 4) {
-     lhept_[itcount]   = dummy.Pt();
-     lheeta_[itcount]  = dummy.Eta();
-     lhephi_[itcount]  = dummy.Phi();
+     lhept_[itcount]    = dummy.Pt();
+     lheeta_[itcount]   = dummy.Eta();
+     lhephi_[itcount]   = dummy.Phi();
+     lhepdgid_[itcount] = type;
     }
     itcount++;
    }
