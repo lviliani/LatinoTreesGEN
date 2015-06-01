@@ -122,7 +122,6 @@ class GenDumper : public edm::EDAnalyzer {
       float nu_lheeta_[10];
       float nu_lhephi_[10]; 
       
-      
       //---- jets
       int njet_;
       float jetpt_[10];
@@ -198,10 +197,10 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("lhephi3", &lhephi_[2], "lhephi3/F");
  myTree_ -> Branch("lhephi4", &lhephi_[3], "lhephi4/F");
 
- myTree_ -> Branch("pdgid1", &pdgid_[0], "pdgid1/F");
- myTree_ -> Branch("pdgid2", &pdgid_[1], "pdgid2/F");
- myTree_ -> Branch("pdgid3", &pdgid_[2], "pdgid3/F");
- myTree_ -> Branch("pdgid4", &pdgid_[3], "pdgid4/F");
+ myTree_ -> Branch("pdgid1", &pdgid_[0], "pdgid1/I");
+ myTree_ -> Branch("pdgid2", &pdgid_[1], "pdgid2/I");
+ myTree_ -> Branch("pdgid3", &pdgid_[2], "pdgid3/I");
+ myTree_ -> Branch("pdgid4", &pdgid_[3], "pdgid4/I");
  
  myTree_ -> Branch("status1", &status_[0], "status1/I");
  myTree_ -> Branch("status2", &status_[1], "status2/I");
@@ -228,19 +227,17 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("nu_phi3", &nu_phi_[2], "nu_phi3/F");
  myTree_ -> Branch("nu_phi4", &nu_phi_[3], "nu_phi4/F");
  
- myTree_ -> Branch("nu_pdgid1", &nu_pdgid_[0], "nu_pdgid1/F");
- myTree_ -> Branch("nu_pdgid2", &nu_pdgid_[1], "nu_pdgid2/F");
- myTree_ -> Branch("nu_pdgid3", &nu_pdgid_[2], "nu_pdgid3/F");
- myTree_ -> Branch("nu_pdgid4", &nu_pdgid_[3], "nu_pdgid4/F");
- 
- 
+ myTree_ -> Branch("nu_pdgid1", &nu_pdgid_[0], "nu_pdgid1/I");
+ myTree_ -> Branch("nu_pdgid2", &nu_pdgid_[1], "nu_pdgid2/I");
+ myTree_ -> Branch("nu_pdgid3", &nu_pdgid_[2], "nu_pdgid3/I");
+ myTree_ -> Branch("nu_pdgid4", &nu_pdgid_[3], "nu_pdgid4/I");
+
  myTree_ -> Branch("nu_lhept1", &nu_lhept_[0], "nu_lhept1/F");
  myTree_ -> Branch("nu_lhept2", &nu_lhept_[1], "nu_lhept2/F");
  myTree_ -> Branch("nu_lheeta1", &nu_lheeta_[0], "nu_lheeta1/F");
  myTree_ -> Branch("nu_lheeta2", &nu_lheeta_[1], "nu_lheeta2/F");
  myTree_ -> Branch("nu_lhephi1", &nu_lhephi_[0], "nu_lhephi1/F");
  myTree_ -> Branch("nu_lhephi2", &nu_lhephi_[1], "nu_lhephi2/F");
- 
  
  myTree_ -> Branch("nu_lhepdgid1", &nu_lhepdgid_[0], "nu_lhepdgid1/I");
  myTree_ -> Branch("nu_lhepdgid2", &nu_lhepdgid_[1], "nu_lhepdgid2/I");
@@ -443,6 +440,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     nu_eta_[nu_itcount]   = genPart->eta();
     nu_phi_[nu_itcount]   = genPart->phi();
     nu_pdgid_[nu_itcount] = genPart->pdgId();
+    status_[nu_itcount] = genPart->status();
    }
    nu_itcount++;
   }
@@ -455,7 +453,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   lheeta_[i] = -99;
   lhephi_[i] = -99;
   lhepdgid_[i]  = 0;
-  
+
   nu_lhept_[i]  = 0;
   nu_lheeta_[i] = -99;
   nu_lhephi_[i] = -99;
@@ -520,7 +518,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    
    if (type == 12 || type == 14 || type == 16) { // neutrino e/mu/tau
     TLorentzVector dummy (
-     LHEhepeup.PUP.at (iPart) [0], // px
+                          LHEhepeup.PUP.at (iPart) [0], // px
                           LHEhepeup.PUP.at (iPart) [1], // py
                           LHEhepeup.PUP.at (iPart) [2], // pz
                           LHEhepeup.PUP.at (iPart) [3] // E
@@ -534,7 +532,6 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
     nu_itcount++;
    }
-   
   }
  }
 
