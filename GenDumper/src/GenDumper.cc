@@ -425,7 +425,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  int nu_itcount = 0;
  for (reco::GenParticleCollection::const_iterator genPart = genParticles->begin(); genPart != genParticles->end(); genPart++){
   int id = abs(genPart->pdgId());
-  if (id == 11 || id == 13 || id == 15) { //---- e/mu/tau
+  if ((id == 11 || id == 13 || id == 15) && genPart->status()==1) { //---- e/mu/tau
    if (itcount < 10) {
     _std_vector_leptonGen_pt.at(itcount) = genPart->pt();
    }
@@ -435,10 +435,16 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     phi_[itcount]   = genPart->phi();
     pdgid_[itcount] = genPart->pdgId();
     status_[itcount] = genPart->status();
+    //if(genPart->isPromptFinalState())std::cout << "isPromptFinalState = " << genPart->isPromptFinalState() << std::endl;
+    //if(genPart->fromHardProcessFinalState())std::cout << "fromHardProcessFinalState = " << genPart->fromHardProcessFinalState() << std::endl;
+    //if(genPart->isDirectPromptTauDecayProductFinalState())std::cout << "isDirectPromptTauDecayProductFinalState = " << genPart->isDirectPromptTauDecayProductFinalState() << std::endl;
+    //if(genPart->isDirectHardProcessTauDecayProductFinalState())std::cout << "isDirectHardProcessTauDecayProductFinalState = " << genPart->isDirectHardProcessTauDecayProductFinalState() << std::endl;
+   
    }
    itcount++;
   }
-  if (id == 12 || id == 14 || id == 16) { //---- neutrino: e/mu/tau
+  //if (id == 12 || id == 14 || id == 16) { //---- neutrino: e/mu/tau
+  if ((id == 12 || id == 14 || id == 16) && genPart->status()==1) { //---- neutrino: e/mu/tau
    //if (nu_itcount < 10) {
    // _std_vector_leptonGen_pt.at(nu_itcount) = genPart->pt();
    //}
@@ -451,6 +457,7 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
    nu_itcount++;
   }
+  //if(genPart->status()==1 && (id < 11 || id > 16) )std::cout << "pdgID = " << genPart->pdgId() << std::endl;
  }
 
  //---- LHE information ----
