@@ -14,18 +14,12 @@ Check if you have writing permissions:
     crab checkwrite --site=T2_CH_CERN
     crab checkwrite --site=T2_CH_CERN --lfn=/store/group/phys_higgs/cmshww/amassiro/RunII/test/
 
-Send the jobs:
-
-    crab submit -c crab_example1.py
-    crab status
-    
-
 
 MultiCRAB
 ====
 
-    python multicrab.py
-
+    python multicrab.py samples/samples_spring15.py
+    
     crab status
     
     crab status folder_name
