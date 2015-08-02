@@ -11,6 +11,20 @@ options.register ('isMiniAod',
                   "is miniAod? (default = False). It changes the collection names")
 
 
+options.register ('id',
+                  0, # default value
+                  VarParsing.multiplicity.singleton, # singleton or list
+                  VarParsing.varType.string, # string, int, or float
+                  'Dataset id')
+
+
+options.register ('label',
+                  'XXX',
+                  VarParsing.multiplicity.singleton,
+                  VarParsing.varType.string,
+                  'Label')
+
+
 options.parseArguments()
 
 
