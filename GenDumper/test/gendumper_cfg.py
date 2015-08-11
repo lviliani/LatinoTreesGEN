@@ -24,6 +24,14 @@ options.register ('label',
                   VarParsing.varType.string,
                   'Label')
 
+# dummy
+options.register ('doMCweights',
+                  False, # default value
+                  VarParsing.multiplicity.singleton, # singleton or list
+                  VarParsing.varType.bool,
+                  'Turn on MC weights dumper (can be \'True\' or \'False\'')
+
+
 
 options.parseArguments()
 

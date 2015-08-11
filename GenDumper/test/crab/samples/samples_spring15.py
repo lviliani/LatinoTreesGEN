@@ -112,3 +112,5 @@ samples['50ns_ST_t-channel']    = ['/ST_t-channel_4f_leptonDecays_13TeV-amcatnlo
 
 config.Data.outLFNDirBase = '/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/'
 
+config.General.workArea     = 'crab_projects_11Aug'  # Make sure you set this parameter
+

@@ -23,6 +23,9 @@ MultiCRAB
     python multicrab.py crab_projects_2Aug status
     python multicrab.py crab_projects_2Aug resubmit
     
+    python multicrab.py crab_projects_11Aug status
+    python multicrab.py crab_projects_11Aug resubmit
+    
     crab status
     
     crab status folder_name
