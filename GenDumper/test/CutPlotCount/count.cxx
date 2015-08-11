@@ -34,7 +34,8 @@ int count(std::string samples) {
  std::cout << " entries = " << myTree->GetEntries() << std::endl;
  int Np = myTree->GetEntries("weightSM>0");
  int Nm = myTree->GetEntries("weightSM<0");
- std::cout << " weight = " << 1. * (Np - Nm) / (Np + Nm) << std::endl;
+ std::cout << " weight = " << 1. * (Np - Nm) / (Np + Nm) ;
+ std::cout << " +/- " << 1. * sqrt(Np + Nm) / (Np + Nm) << std::endl; //--- approx error
  std::cout << " ~~~~~ " << std::endl;
  
  return 0;
