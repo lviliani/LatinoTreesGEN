@@ -14,7 +14,8 @@ Calculate weights for aMC@NLO
     # 25 ns
     ls  --color=none  /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/ | \
         awk '{print "ls --color=none /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/"$1"/*25ns*/*/*/GEN*.root &> "$1".txt"}' | /bin/sh
-        
+    
+    
     # analyse list of files
     ls  --color=none /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/ | \
         awk '{print "root -l -q -b count.cxx\\\(\\\""$1".txt\\\"\\\)"}' | /bin/sh
@@ -22,11 +23,18 @@ Calculate weights for aMC@NLO
     # 50 ns
     ls  --color=none  /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/ | \
         awk '{print "ls --color=none /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/"$1"/*50ns*/*/*/GEN*.root &> "$1".txt"}' | /bin/sh
-        
+    
+    # 25 ns
+    ls  --color=none  /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/ | \
+        awk '{print "ls --color=none /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/"$1"/*25ns*/*/*/GEN*.root &> 25/"$1".txt"}' | /bin/sh
+    
     # analyse list of files
     ls  --color=none /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/ | \
         awk '{print "root -l -q -b count.cxx\\\(\\\""$1".txt\\\"\\\)"}' | /bin/sh
     
+    # analyse 25ns
+    ls  --color=none /tmp/amassiro/eos/cms/store/group/phys_higgs/cmshww/amassiro/RunII/GenDumper/ | \
+        awk '{print "root -l -q -b count.cxx\\\(\\\"25ns/"$1".txt\\\"\\\)"}' | /bin/sh
     
     
         
