@@ -12,7 +12,7 @@ int count(std::string samples) {
  std::string nameFile;
  indata.open(samples.c_str()); // opens the file
  if (!indata) { // file couldn't be opened
-  std::cerr << "Error: file " << argv[1] << " could not be opened" << std::endl;
+  std::cerr << "Error: file " <<samples.c_str() << " could not be opened" << std::endl;
   return 1;
  }
  
