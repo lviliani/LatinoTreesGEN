@@ -91,6 +91,7 @@ class GenDumper : public edm::EDAnalyzer {
       edm::InputTag GenJetCollection_;
       edm::InputTag GenParticlesCollection_;
       edm::InputTag mcLHEEventInfoTag_;
+      edm::InputTag mcLHERunInfoTag_;
       edm::InputTag genEvtInfoTag_;
       bool dumpWeights_;
       bool _debug;
@@ -103,7 +104,7 @@ class GenDumper : public edm::EDAnalyzer {
       float eta_[10];
       float phi_[10];
       int status_[10];
-
+      float _mll;
       std::vector<float> _std_vector_leptonGen_pt;
       
       
@@ -165,6 +166,7 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  GenJetCollection_       = iConfig.getParameter<edm::InputTag>("GenJetCollection");
  GenParticlesCollection_ = iConfig.getParameter<edm::InputTag>("GenParticlesCollection");
  mcLHEEventInfoTag_      = iConfig.getParameter<edm::InputTag>("mcLHEEventInfoTag");
+ mcLHERunInfoTag_        = iConfig.getParameter<edm::InputTag>("mcLHERunInfoTag"); //---- "externalLHEProducer"
  genEvtInfoTag_          = iConfig.getParameter<edm::InputTag>("genEvtInfoTag");
  dumpWeights_            = iConfig.getUntrackedParameter< bool >("dumpWeights",false);
  _debug                  = iConfig.getUntrackedParameter< bool >("debug",false);
@@ -173,6 +175,8 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  edm::Service<TFileService> fs ;
  myTree_ = fs -> make <TTree>("myTree","myTree");
 
+ 
+ myTree_ -> Branch("mll", &_mll, "mll/F");
  myTree_ -> Branch("pt1", &pt_[0], "pt1/F");
  myTree_ -> Branch("pt2", &pt_[1], "pt2/F");
  myTree_ -> Branch("eta1", &eta_[0], "eta1/F");
@@ -392,6 +396,8 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   nu_status_[i]  = 0;
  }
 
+ _mll = -10;
+ 
   for (int i=0; i<4; i++) {
   jetpt_[i]  = 0;
   jeteta_[i] = -99;
@@ -440,6 +446,14 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //if(genPart->isDirectPromptTauDecayProductFinalState())std::cout << "isDirectPromptTauDecayProductFinalState = " << genPart->isDirectPromptTauDecayProductFinalState() << std::endl;
     //if(genPart->isDirectHardProcessTauDecayProductFinalState())std::cout << "isDirectHardProcessTauDecayProductFinalState = " << genPart->isDirectHardProcessTauDecayProductFinalState() << std::endl;
    
+    if (itcount == 1) {
+     TLorentzVector temp1;
+     temp1.SetPtEtaPhiM(pt_[0], eta_[0], phi_[0], 0);
+     TLorentzVector temp2;
+     temp2.SetPtEtaPhiM(pt_[1], eta_[1], phi_[1], 0);
+     _mll = (temp2 + temp1).M();
+    }
+    
    }
    itcount++;
   }
@@ -695,45 +709,49 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
  
  typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
  
- iRun.getByLabel( "externalLHEProducer", run );
- 
- LHERunInfoProduct myLHERunInfoProduct = *(run.product());
- 
- for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
-  std::cout << iter->tag() << std::endl;
-  std::vector<std::string> lines = iter->lines();
-  for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
-   std::cout << lines.at(iLine);
+ if (!(mcLHERunInfoTag_ == edm::InputTag(""))) {
+  
+  
+  iRun.getByLabel( mcLHERunInfoTag_, run );
+  
+  LHERunInfoProduct myLHERunInfoProduct = *(run.product());
+  
+  for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
+   std::cout << iter->tag() << std::endl;
+   std::vector<std::string> lines = iter->lines();
+   for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
+    std::cout << lines.at(iLine);
+   }
   }
+  
+  
+  const lhef::HEPRUP thisHeprup = run->heprup();
+  std::cout << "HEPRUP \n" << std::endl;
+  std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup.IDBMUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.IDBMUP.second << std::endl;
+  std::cout << "EBMUP " << std::setw(14) << std::fixed << thisHeprup.EBMUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.EBMUP.second << std::endl;
+  std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup.PDFGUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.PDFGUP.second << std::endl;
+  std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup.PDFSUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.PDFSUP.second << std::endl;
+  std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup.IDWTUP << std::endl;
+  std::cout << "NPRUP " << std::setw(14) << std::fixed << thisHeprup.NPRUP << std::endl;
+  std::cout << " XSECUP " << std::setw(14) << std::fixed;
+  std::cout << " XERRUP " << std::setw(14) << std::fixed;
+  std::cout << " XMAXUP " << std::setw(14) << std::fixed;
+  std::cout << " LPRUP " << std::setw(14) << std::fixed << std::endl;
+  for ( unsigned int iSize = 0 ; iSize < thisHeprup.XSECUP.size() ; iSize++ ) {
+   std::cout << std::setw(14) << std::fixed << thisHeprup.XSECUP[iSize];
+   std::cout << std::setw(14) << std::fixed << thisHeprup.XERRUP[iSize];
+   std::cout << std::setw(14) << std::fixed << thisHeprup.XMAXUP[iSize];
+   std::cout << std::setw(14) << std::fixed << thisHeprup.LPRUP[iSize];
+   std::cout << std::endl;
+  }
+  std::cout << " " << std::endl;
+  
+  
  }
- 
- 
- const lhef::HEPRUP thisHeprup_ = run->heprup();
- std::cout << "HEPRUP \n" << std::endl;
- std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.second << std::endl;
- std::cout << "EBMUP " << std::setw(14) << std::fixed << thisHeprup_.EBMUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.EBMUP.second << std::endl;
- std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.second << std::endl;
- std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.second << std::endl;
- std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup_.IDWTUP << std::endl;
- std::cout << "NPRUP " << std::setw(14) << std::fixed << thisHeprup_.NPRUP << std::endl;
- std::cout << " XSECUP " << std::setw(14) << std::fixed;
- std::cout << " XERRUP " << std::setw(14) << std::fixed;
- std::cout << " XMAXUP " << std::setw(14) << std::fixed;
- std::cout << " LPRUP " << std::setw(14) << std::fixed << std::endl;
- for ( unsigned int iSize = 0 ; iSize < thisHeprup_.XSECUP.size() ; iSize++ ) {
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.XSECUP[iSize];
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.XERRUP[iSize];
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.XMAXUP[iSize];
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.LPRUP[iSize];
-  std::cout << std::endl;
- }
- std::cout << " " << std::endl;
- 
- 
  
  
 //  edm::Handle< LHEXMLStringProduct > LHEAscii;
@@ -782,16 +800,6 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
 //   outfile.close();
 //   ++iout;
 //  }
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
  
  
  

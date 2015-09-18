@@ -11,6 +11,21 @@ options.register ('isMiniAod',
                   "is miniAod? (default = False). It changes the collection names")
 
 
+options.register ('mcLHERunInfoTag',
+                  'externalLHEProducer',
+                  VarParsing.multiplicity.singleton,
+                  VarParsing.varType.string,
+                  'LHE run information')
+
+
+options.register ('mcLHEEventInfoTag',
+                  'generator',
+                  VarParsing.multiplicity.singleton,
+                  VarParsing.varType.string,
+                  'LHE event information')
+
+
+
 options.register ('id',
                   0, # default value
                   VarParsing.multiplicity.singleton, # singleton or list
@@ -30,6 +45,7 @@ options.register ('doMCweights',
                   VarParsing.multiplicity.singleton, # singleton or list
                   VarParsing.varType.bool,
                   'Turn on MC weights dumper (can be \'True\' or \'False\'')
+
 
 
 
@@ -60,17 +76,22 @@ if options.isMiniAod :
   process.Analyzer = cms.EDAnalyzer('GenDumper',
      GenJetCollection       = cms.InputTag("slimmedGenJets"),  # -> to run on miniAod
      GenParticlesCollection = cms.InputTag("prunedGenParticles"),  # -> to run on miniAod
-     mcLHEEventInfoTag      = cms.InputTag("externalLHEProducer"),
+     mcLHEEventInfoTag      = cms.InputTag(options.mcLHEEventInfoTag),
+     #mcLHEEventInfoTag      = cms.InputTag("externalLHEProducer"),
+     mcLHERunInfoTag        = cms.InputTag(options.mcLHERunInfoTag),
      #mcLHEEventInfoTag      = cms.InputTag("source"),
      genEvtInfoTag          = cms.InputTag("generator"), 
      dumpWeights            = cms.untracked.bool(False),
      debug                  = cms.untracked.bool(False)
+     
   )
 else :
   process.Analyzer = cms.EDAnalyzer('GenDumper',
      GenJetCollection       = cms.InputTag("ak5GenJets"),
      GenParticlesCollection = cms.InputTag("genParticles"),
-     mcLHEEventInfoTag      = cms.InputTag("externalLHEProducer"),
+     mcLHEEventInfoTag      = cms.InputTag(options.mcLHEEventInfoTag),
+     #mcLHEEventInfoTag      = cms.InputTag("externalLHEProducer"),
+     mcLHERunInfoTag        = cms.InputTag(options.mcLHERunInfoTag),
      #mcLHEEventInfoTag      = cms.InputTag("source"),
      genEvtInfoTag          = cms.InputTag("generator"), 
      dumpWeights            = cms.untracked.bool(False),
