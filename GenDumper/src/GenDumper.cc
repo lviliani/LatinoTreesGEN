@@ -860,20 +860,18 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
      std::cout << "iter->tag():";
      std::cout << iter->tag() << std::endl;
      std::vector<std::string> lines = iter->lines();
-     if (iter->tag() == "initrwgt")
      for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
-       TString a = lines.at(iLine);
-       list.push_back(a);
-       //if (a.Contains("\"1001\""))
-       //std::cout << a <<","<<a.Length()<< std::endl;
+       if (iter->tag() == "initrwgt"){
+	 TString a = lines.at(iLine);
+	 list.push_back(a);
+       }
        std::cout << lines.at(iLine);
      }
    }
-  
+   
   
   const lhef::HEPRUP thisHeprup = run->heprup();
 
-  std::cout << "QUI!!!!!!!" << std::endl;
   std::cout << "HEPRUP \n" << std::endl;
   std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup.IDBMUP.first;
   std::cout << std::setw(14) << std::fixed << thisHeprup.IDBMUP.second << std::endl;
