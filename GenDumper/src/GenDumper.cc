@@ -98,7 +98,7 @@ class GenDumper : public edm::EDAnalyzer {
       bool dumpWeights_;
       bool _debug;
       
-      
+
       TTree* myTree_;
       //---- lepton
       int pdgid_[10];
@@ -115,6 +115,7 @@ class GenDumper : public edm::EDAnalyzer {
       float hardProcessLepton_mll;
       std::vector<float> _std_vector_leptonGen_pt;
       std::vector<float> _std_vector_hardProcessLeptonGen_pt; 
+      std::vector<TString> list;      
       
       int lhepdgid_[10];
       float lhept_[10];
@@ -148,6 +149,8 @@ class GenDumper : public edm::EDAnalyzer {
 
       //---- MC qcd scale
       std::vector <double> _weightsLHE;
+      std::vector <std::string> _weightsLHEID;
+      std::vector <std::string> _weightsLHEIDExplained;
       double _weightNominalLHE;
       std::vector <double> _weights;
       double _weightSM;
@@ -359,6 +362,8 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("w22", &w22_, "w22/F");
  
  myTree_ -> Branch("weightsLHE", "std::vector<double>", &_weightsLHE);
+ myTree_ -> Branch("weightsLHEID", "std::vector<std::string>", &_weightsLHEID);
+ myTree_ -> Branch("weightsLHEIDExplained", "std::vector<std::string>", &_weightsLHEIDExplained);
  myTree_ -> Branch("weightNominalLHE", &_weightNominalLHE, "weightNominalLHE/D");
  myTree_ -> Branch("weights", "std::vector<double>", &_weights);
  myTree_ -> Branch("weightSM", &_weightSM, "weightSM/D");
@@ -703,6 +708,22 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  }
  _weightNominalLHE = productLHEHandle->originalXWGTUP();
  
+ _weightsLHEID.clear();
+ unsigned int num_whichWeightID = productLHEHandle->weights().size();
+ for (unsigned int iWeight = 0; iWeight < num_whichWeightID; iWeight++) {
+  _weightsLHEID.push_back( productLHEHandle->weights()[iWeight].id ); 
+  if (_debug) std::cout << " weightLHEID[" << iWeight << "] = " << productLHEHandle->weights()[iWeight].id << std::endl;
+ }
+
+
+ _weightsLHEIDExplained.clear();
+ for (unsigned int iWeight = 0; iWeight < num_whichWeightID; iWeight++) {
+   for (unsigned int j = 0; j < list.size(); ++j){
+     if (list.at(j).Contains(productLHEHandle->weights()[iWeight].id))
+       _weightsLHEIDExplained.push_back( std::string(list.at(j)) ); 
+   }
+ }
+
  if (_debug) std::cout << " weightNominalLHE = " << _weightNominalLHE << std::endl;
  if (_debug) std::cout << " ---------- " << std::endl;
  
@@ -834,16 +855,25 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
   
   LHERunInfoProduct myLHERunInfoProduct = *(run.product());
   
-  for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
-   std::cout << iter->tag() << std::endl;
-   std::vector<std::string> lines = iter->lines();
-   for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
-    std::cout << lines.at(iLine);
+
+   for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
+     std::cout << "iter->tag():";
+     std::cout << iter->tag() << std::endl;
+     std::vector<std::string> lines = iter->lines();
+     if (iter->tag() == "initrwgt")
+     for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
+       TString a = lines.at(iLine);
+       list.push_back(a);
+       //if (a.Contains("\"1001\""))
+       //std::cout << a <<","<<a.Length()<< std::endl;
+       std::cout << lines.at(iLine);
+     }
    }
-  }
   
   
   const lhef::HEPRUP thisHeprup = run->heprup();
+
+  std::cout << "QUI!!!!!!!" << std::endl;
   std::cout << "HEPRUP \n" << std::endl;
   std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup.IDBMUP.first;
   std::cout << std::setw(14) << std::fixed << thisHeprup.IDBMUP.second << std::endl;
