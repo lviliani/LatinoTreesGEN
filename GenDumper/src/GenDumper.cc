@@ -129,6 +129,7 @@ class GenDumper : public edm::EDAnalyzer {
       std::vector<float> _std_vector_hardProcessLeptonGen_pt; 
 
       float _m2MuFromZorGstar;
+      float _ZGstarDimu_DelaR;
       
       int lhepdgid_[10];
       float lhept_[10];
@@ -211,6 +212,7 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("ZGstarMu2_pt", &muon2FromGstar.pt, "ZGstarMu2_pt/F");
  myTree_ -> Branch("ZGstarMu2_eta",&muon2FromGstar.eta,"ZGstarMu2_eta/F");
  myTree_ -> Branch("ZGstarMu2_phi",&muon2FromGstar.phi,"ZGstarMu2_phi/F");
+ myTree_ -> Branch("ZGstarDimu_DelaR",&_ZGstarDimu_DelaR,"ZGstarDimu_DelaR/F");
 
  myTree_ -> Branch("pt1", &pt_[0], "pt1/F");
  myTree_ -> Branch("pt2", &pt_[1], "pt2/F");
@@ -489,12 +491,13 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
  _mll = -10;
  _m2MuFromZorGstar = DefaultFloat;
-  muon1FromGstar.pt  = DefaultFloat;
-  muon1FromGstar.eta = DefaultFloat;
-  muon1FromGstar.phi = DefaultFloat;
-  muon2FromGstar.pt  = DefaultFloat;
-  muon2FromGstar.eta = DefaultFloat;
-  muon2FromGstar.phi = DefaultFloat;
+ _ZGstarDimu_DelaR = DefaultFloat;
+ muon1FromGstar.pt  = DefaultFloat;
+ muon1FromGstar.eta = DefaultFloat;
+ muon1FromGstar.phi = DefaultFloat;
+ muon2FromGstar.pt  = DefaultFloat;
+ muon2FromGstar.eta = DefaultFloat;
+ muon2FromGstar.phi = DefaultFloat;
  hardProcessLepton_mll = -10; 
 
  for (int i=0; i<4; i++) {
@@ -923,8 +926,14 @@ float GenDumper::mass2MuonFromZorGstar( edm::Handle<reco::GenParticleCollection>
 	                      pMuonState1[1]->eta(),
 	                      pMuonState1[1]->phi(),
 			      0.106);
-	invMass2Muon = (muon4V_1 + muon4V_2).M();
 
+	invMass2Muon = (muon4V_1 + muon4V_2).M();
+	_ZGstarDimu_DelaR=
+	  sqrt(
+	      reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi) * reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi)
+	      +
+	      (muon1FromGstar.eta - muon2FromGstar.eta)             * (muon1FromGstar.eta - muon2FromGstar.eta)
+	      );
 
 	return invMass2Muon;
 
@@ -1022,6 +1031,13 @@ float GenDumper::mass2MuonFromZorGstar( edm::Handle<reco::GenParticleCollection>
 	      muon2FromGstar.phi = pMuonState1[j]->phi();
 
 	      invMass2Muon = tmpInvMass2Muon;
+	      _ZGstarDimu_DelaR=
+	        sqrt(
+	            reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi) * reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi)
+	            +
+	            (muon1FromGstar.eta - muon2FromGstar.eta)             * (muon1FromGstar.eta - muon2FromGstar.eta)
+	            );
+
 	      muon4V_1 = tmp4V_1;
 	      muon4V_2 = tmp4V_2;
 	    }
@@ -1032,6 +1048,7 @@ float GenDumper::mass2MuonFromZorGstar( edm::Handle<reco::GenParticleCollection>
 	  tmpInvMass2Muon = (muon4V_1 + muon4V_2).M();
 	  std::cout<<"3 Muon from W case: InvMas from final muon candidates is "<<tmpInvMass2Muon<<"\t"<<"InvMass from roof: "<<invMass2Muon<<std::endl;
 	}
+
 
 	return invMass2Muon;
       }else continue;
@@ -1113,11 +1130,21 @@ float GenDumper::mass2MuonFromZorGstar( edm::Handle<reco::GenParticleCollection>
 	                      pMuonState1[1]->phi(),
 			      0.106);
 	invMass2Muon = (muon4V_1 + muon4V_2).M();
-	return invMass2Muon;
+
+	_ZGstarDimu_DelaR=
+	  sqrt(
+	      reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi) * reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi)
+	      +
+	      (muon1FromGstar.eta - muon2FromGstar.eta)             * (muon1FromGstar.eta - muon2FromGstar.eta)
+	      );
+
 	if(_debug)
 	{
 	  std::cout<<"2 Muon from Z case: InvMas from Status1 muon candidates is "<<invMass2Muon<<std::endl;
 	}
+
+	return invMass2Muon;
+
       }else continue; // nMuon from Z0 should be 2
     }else if( (abs(MomInfo.id) <= 6 && abs(MomInfo.id) >= 1) || abs(MomInfo.id)== 21)
     {// Quark or gluon
@@ -1207,7 +1234,16 @@ float GenDumper::mass2MuonFromZorGstar( edm::Handle<reco::GenParticleCollection>
 	{
 	  std::cout<<"InvM of dimuon from Q: "<<invMass2Muon<<std::endl;
 	}
+
+	_ZGstarDimu_DelaR=
+	  sqrt(
+	      reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi) * reco::deltaPhi(muon1FromGstar.phi,muon2FromGstar.phi)
+	      +
+	      (muon1FromGstar.eta - muon2FromGstar.eta)             * (muon1FromGstar.eta - muon2FromGstar.eta)
+	      );
+
 	return invMass2Muon; // Strop here to aboid doube checking from two muons
+
       }else continue;
 
     }else continue;
