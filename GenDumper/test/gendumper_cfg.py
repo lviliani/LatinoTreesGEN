@@ -9,6 +9,11 @@ options.register ('isMiniAod',
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.bool,
                   "is miniAod? (default = False). It changes the collection names")
+options.register ('debug',
+                  False,
+                  VarParsing.multiplicity.singleton,
+                  VarParsing.varType.bool,
+                  "debug? (default = False).")
 
 
 options.register ('mcLHERunInfoTag',
@@ -48,8 +53,6 @@ options.register ('doMCweights',
                   'Turn on MC weights dumper (can be \'True\' or \'False\'')
 
 
-
-
 options.parseArguments()
 
 
@@ -74,6 +77,7 @@ process.TFileService = cms.Service("TFileService",
 )
 
 if options.isMiniAod :
+  print "Analyze MiniAod"
   process.Analyzer = cms.EDAnalyzer('GenDumper',
      GenJetCollection       = cms.InputTag("slimmedGenJets"),  # -> to run on miniAod
      GenParticlesCollection = cms.InputTag("prunedGenParticles"),  # -> to run on miniAod
@@ -83,7 +87,7 @@ if options.isMiniAod :
      #mcLHEEventInfoTag      = cms.InputTag("source"),
      genEvtInfoTag          = cms.InputTag("generator"), 
      dumpWeights            = cms.untracked.bool(False),
-     debug                  = cms.untracked.bool(False)
+     debug                  = cms.untracked.bool(options.debug)
      
   )
 else :
@@ -96,10 +100,11 @@ else :
      #mcLHEEventInfoTag      = cms.InputTag("source"),
      genEvtInfoTag          = cms.InputTag("generator"), 
      dumpWeights            = cms.untracked.bool(False),
-     debug                  = cms.untracked.bool(False)
+     debug                  = cms.untracked.bool(options.debug)
   )
 
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
-process.load("Configuration.StandardSequences.Generator_cff")
+#process.load("Configuration.StandardSequences.Generator_cff")
 
-process.p = cms.Path(process.fixGenInfo*process.Analyzer)
+process.p = cms.Path(process.Analyzer)
+#process.p = cms.Path(process.fixGenInfo*process.Analyzer)
