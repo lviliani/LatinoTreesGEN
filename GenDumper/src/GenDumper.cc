@@ -40,8 +40,10 @@
 
 
 //---- for GenParticles
+#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-// #include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/Candidate/interface/Candidate.h"
+#include "PhysicsTools/HepMCCandAlgos/interface/GenParticlesHelper.h"
 
 //---- for GenJets
 #include "DataFormats/JetReco/interface/GenJet.h" 
@@ -63,9 +65,16 @@
 //---- to get weights
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
+//---- to order by pT
+#include "CommonTools/Utils/interface/PtComparator.h"
 //
 // class declaration
 //
+
+using namespace std;
+using namespace edm;
+using namespace reco;
+using namespace GenParticlesHelper;
 
 class GenDumper : public edm::EDAnalyzer {
    public:
@@ -86,11 +95,12 @@ class GenDumper : public edm::EDAnalyzer {
       virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       bool isJetALepton(float phi, float eta, edm::Handle<reco::GenParticleCollection> genParticles);
       bool isJetALepton(float phi, float eta, lhef::HEPEUP LHEhepeup);
-
+      const reco::Candidate* afterFSRLepton(const reco::Candidate&);
       // ----------member data ---------------------------
       edm::InputTag GenJetCollection_;
       edm::InputTag GenParticlesCollection_;
       edm::InputTag mcLHEEventInfoTag_;
+      edm::InputTag mcLHERunInfoTag_;
       edm::InputTag genEvtInfoTag_;
       bool dumpWeights_;
       bool _debug;
@@ -99,14 +109,26 @@ class GenDumper : public edm::EDAnalyzer {
       TTree* myTree_;
       //---- lepton
       int pdgid_[10];
+      int hardProcessLepton_pdgid_[10];
+      int afterFSRLepton_pdgid_[10];
       float pt_[10];
+      float hardProcessLepton_pt_[10];
+      float afterFSRLepton_pt_[10];
       float eta_[10];
+      float hardProcessLepton_eta_[10]; 
+      float afterFSRLepton_eta_[10];
       float phi_[10];
+      float hardProcessLepton_phi_[10];
+      float afterFSRLepton_phi_[10];
       int status_[10];
-
+      int hardProcessLepton_status_[10];
+      int afterFSRLepton_status_[10];
+      float _mll;
+      float hardProcessLepton_mll;
       std::vector<float> _std_vector_leptonGen_pt;
-      
-      
+      std::vector<float> _std_vector_hardProcessLeptonGen_pt; 
+      std::vector<float> _std_vector_afterFSRLeptonGen_pt;    
+  
       int lhepdgid_[10];
       float lhept_[10];
       float lheeta_[10];
@@ -117,6 +139,11 @@ class GenDumper : public edm::EDAnalyzer {
       float nu_eta_[10];
       float nu_phi_[10];
       int nu_status_[10];
+      int hardProcessNu_pdgid_[10];
+      float hardProcessNu_pt_[10];
+      float hardProcessNu_eta_[10];
+      float hardProcessNu_phi_[10];
+      int hardProcessNu_status_[10];
       
       int nu_lhepdgid_[10];
       float nu_lhept_[10];
@@ -165,6 +192,7 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  GenJetCollection_       = iConfig.getParameter<edm::InputTag>("GenJetCollection");
  GenParticlesCollection_ = iConfig.getParameter<edm::InputTag>("GenParticlesCollection");
  mcLHEEventInfoTag_      = iConfig.getParameter<edm::InputTag>("mcLHEEventInfoTag");
+ mcLHERunInfoTag_        = iConfig.getParameter<edm::InputTag>("mcLHERunInfoTag"); //---- "externalLHEProducer"
  genEvtInfoTag_          = iConfig.getParameter<edm::InputTag>("genEvtInfoTag");
  dumpWeights_            = iConfig.getUntrackedParameter< bool >("dumpWeights",false);
  _debug                  = iConfig.getUntrackedParameter< bool >("debug",false);
@@ -173,12 +201,27 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  edm::Service<TFileService> fs ;
  myTree_ = fs -> make <TTree>("myTree","myTree");
 
+ 
+ myTree_ -> Branch("mll", &_mll, "mll/F");
+ myTree_ -> Branch("hardProcessLepton_mll", &hardProcessLepton_mll, "hardProcessLepton_mll/F");
  myTree_ -> Branch("pt1", &pt_[0], "pt1/F");
  myTree_ -> Branch("pt2", &pt_[1], "pt2/F");
+ myTree_ -> Branch("hardProcessLepton_pt1", &hardProcessLepton_pt_[0], "hardProcessLepton_pt1/F");
+ myTree_ -> Branch("hardProcessLepton_pt2", &hardProcessLepton_pt_[1], "hardProcessLepton_pt2/F");
+ myTree_ -> Branch("afterFSRLepton_pt1", &afterFSRLepton_pt_[0], "afterFSRLepton_pt1/F");
+ myTree_ -> Branch("afterFSRLepton_pt2", &afterFSRLepton_pt_[1], "afterFSRLepton_pt2/F");
  myTree_ -> Branch("eta1", &eta_[0], "eta1/F");
  myTree_ -> Branch("eta2", &eta_[1], "eta2/F");
  myTree_ -> Branch("phi1", &phi_[0], "phi1/F");
  myTree_ -> Branch("phi2", &phi_[1], "phi2/F");
+ myTree_ -> Branch("hardProcessLepton_eta1", &hardProcessLepton_eta_[0], "hardProcessLepton_eta1/F");
+ myTree_ -> Branch("hardProcessLepton_eta2", &hardProcessLepton_eta_[1], "hardProcessLepton_eta2/F");
+ myTree_ -> Branch("hardProcessLepton_phi1", &hardProcessLepton_phi_[0], "hardProcessLepton_phi1/F");
+ myTree_ -> Branch("hardProcessLepton_phi2", &hardProcessLepton_phi_[1], "hardProcessLepton_phi2/F");
+ myTree_ -> Branch("afterFSRLepton_eta1", &afterFSRLepton_eta_[0], "afterFSRLepton_eta1/F");
+ myTree_ -> Branch("afterFSRLepton_eta2", &afterFSRLepton_eta_[1], "afterFSRLepton_eta2/F");
+ myTree_ -> Branch("afterFSRLepton_phi1", &afterFSRLepton_phi_[0], "afterFSRLepton_phi1/F");
+ myTree_ -> Branch("afterFSRLepton_phi2", &afterFSRLepton_phi_[1], "afterFSRLepton_phi2/F");
  myTree_ -> Branch("lhept1", &lhept_[0], "lhept1/F");
  myTree_ -> Branch("lhept2", &lhept_[1], "lhept2/F");
  myTree_ -> Branch("lheeta1", &lheeta_[0], "lheeta1/F");
@@ -187,10 +230,22 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("lhephi2", &lhephi_[1], "lhephi2/F");
  myTree_ -> Branch("pt3", &pt_[2], "pt3/F");
  myTree_ -> Branch("pt4", &pt_[3], "pt4/F");
+ myTree_ -> Branch("hardProcessLepton_pt3", &hardProcessLepton_pt_[2], "hardProcessLepton_pt3/F");
+ myTree_ -> Branch("hardProcessLepton_pt4", &hardProcessLepton_pt_[3], "hardProcessLepton_pt4/F");
+ myTree_ -> Branch("afterFSRLepton_pt3", &afterFSRLepton_pt_[2], "afterFSRLepton_pt3/F");
+ myTree_ -> Branch("afterFSRLepton_pt4", &afterFSRLepton_pt_[3], "afterFSRLepton_pt4/F");
  myTree_ -> Branch("eta3", &eta_[2], "eta3/F");
  myTree_ -> Branch("eta4", &eta_[3], "eta4/F");
+ myTree_ -> Branch("hardProcessLepton_eta3", &hardProcessLepton_eta_[2], "hardProcessLepton_eta3/F");
+ myTree_ -> Branch("hardProcessLepton_eta4", &hardProcessLepton_eta_[3], "hardProcessLepton_eta4/F");
+ myTree_ -> Branch("afterFSRLepton_eta3", &afterFSRLepton_eta_[2], "afterFSRLepton_eta3/F");
+ myTree_ -> Branch("afterFSRLepton_eta4", &afterFSRLepton_eta_[3], "afterFSRLepton_eta4/F");
  myTree_ -> Branch("phi3", &phi_[2], "phi3/F");
  myTree_ -> Branch("phi4", &phi_[3], "phi4/F");
+ myTree_ -> Branch("hardProcessLepton_phi3", &hardProcessLepton_phi_[2], "hardProcessLepton_phi3/F");
+ myTree_ -> Branch("hardProcessLepton_phi4", &hardProcessLepton_phi_[3], "hardProcessLepton_phi4/F");
+ myTree_ -> Branch("afterFSRLepton_phi3", &afterFSRLepton_phi_[2], "afterFSRLepton_phi3/F");
+ myTree_ -> Branch("afterFSRLepton_phi4", &afterFSRLepton_phi_[3], "afterFSRLepton_phi4/F");
  myTree_ -> Branch("lhept3", &lhept_[2], "lhept3/F");
  myTree_ -> Branch("lhept4", &lhept_[3], "lhept4/F");
  myTree_ -> Branch("lheeta3", &lheeta_[2], "lheeta3/F");
@@ -202,16 +257,37 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("pdgid2", &pdgid_[1], "pdgid2/I");
  myTree_ -> Branch("pdgid3", &pdgid_[2], "pdgid3/I");
  myTree_ -> Branch("pdgid4", &pdgid_[3], "pdgid4/I");
+ myTree_ -> Branch("hardProcessLepton_pdgid1", &hardProcessLepton_pdgid_[0], "hardProcessLepton_pdgid1/I");
+ myTree_ -> Branch("hardProcessLepton_pdgid2", &hardProcessLepton_pdgid_[1], "hardProcessLepton_pdgid2/I");
+ myTree_ -> Branch("hardProcessLepton_pdgid3", &hardProcessLepton_pdgid_[2], "hardProcessLepton_pdgid3/I");
+ myTree_ -> Branch("hardProcessLepton_pdgid4", &hardProcessLepton_pdgid_[3], "hardProcessLepton_pdgid4/I");
+ myTree_ -> Branch("afterFSRLepton_pdgid1", &afterFSRLepton_pdgid_[0], "afterFSRLepton_pdgid1/I");
+ myTree_ -> Branch("afterFSRLepton_pdgid2", &afterFSRLepton_pdgid_[1], "afterFSRLepton_pdgid2/I");
+ myTree_ -> Branch("afterFSRLepton_pdgid3", &afterFSRLepton_pdgid_[2], "afterFSRLepton_pdgid3/I");
+ myTree_ -> Branch("afterFSRLepton_pdgid4", &afterFSRLepton_pdgid_[3], "afterFSRLepton_pdgid4/I");
+
  
  myTree_ -> Branch("status1", &status_[0], "status1/I");
  myTree_ -> Branch("status2", &status_[1], "status2/I");
  myTree_ -> Branch("status3", &status_[2], "status3/I");
  myTree_ -> Branch("status4", &status_[3], "status4/I");
+ myTree_ -> Branch("hardProcessLepton_status1", &hardProcessLepton_status_[0], "hardProcessLepton_status1/I");
+ myTree_ -> Branch("hardProcessLepton_status2", &hardProcessLepton_status_[1], "hardProcessLepton_status2/I");
+ myTree_ -> Branch("hardProcessLepton_status3", &hardProcessLepton_status_[2], "hardProcessLepton_status3/I");
+ myTree_ -> Branch("hardProcessLepton_status4", &hardProcessLepton_status_[3], "hardProcessLepton_status4/I");
+ myTree_ -> Branch("afterFSRLepton_status1", &afterFSRLepton_status_[0], "afterFSRLepton_status1/I");
+ myTree_ -> Branch("afterFSRLepton_status2", &afterFSRLepton_status_[1], "afterFSRLepton_status2/I");
+ myTree_ -> Branch("afterFSRLepton_status3", &afterFSRLepton_status_[2], "afterFSRLepton_status3/I");
+ myTree_ -> Branch("afterFSRLepton_status4", &afterFSRLepton_status_[3], "afterFSRLepton_status4/I");
  
  myTree_ -> Branch("nu_status1", &nu_status_[0], "nu_status1/I");
  myTree_ -> Branch("nu_status2", &nu_status_[1], "nu_status2/I");
  myTree_ -> Branch("nu_status3", &nu_status_[2], "nu_status3/I");
  myTree_ -> Branch("nu_status4", &nu_status_[3], "nu_status4/I");
+ myTree_ -> Branch("hardProcessNu_status1", &hardProcessNu_status_[0], "hardProcessNu_status1/I");
+ myTree_ -> Branch("hardProcessNu_status2", &hardProcessNu_status_[1], "hardProcessNu_status2/I");
+ myTree_ -> Branch("hardProcessNu_status3", &hardProcessNu_status_[2], "hardProcessNu_status3/I");
+ myTree_ -> Branch("hardProcessNu_status4", &hardProcessNu_status_[3], "hardProcessNu_status4/I");
  
  myTree_ -> Branch("lhepdgid1", &lhepdgid_[0], "lhepdgid1/I");
  myTree_ -> Branch("lhepdgid2", &lhepdgid_[1], "lhepdgid2/I");
@@ -238,6 +314,26 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("nu_pdgid3", &nu_pdgid_[2], "nu_pdgid3/I");
  myTree_ -> Branch("nu_pdgid4", &nu_pdgid_[3], "nu_pdgid4/I");
 
+ myTree_ -> Branch("hardProcessNu_pt1", &hardProcessNu_pt_[0], "hardProcessNu_pt1/F");
+ myTree_ -> Branch("hardProcessNu_pt2", &hardProcessNu_pt_[1], "hardProcessNu_pt2/F");
+ myTree_ -> Branch("hardProcessNu_pt3", &hardProcessNu_pt_[2], "hardProcessNu_pt3/F");
+ myTree_ -> Branch("hardProcessNu_pt4", &hardProcessNu_pt_[3], "hardProcessNu_pt4/F");
+
+ myTree_ -> Branch("hardProcessNu_eta1", &hardProcessNu_eta_[0], "hardProcessNu_eta1/F");
+ myTree_ -> Branch("hardProcessNu_eta2", &hardProcessNu_eta_[1], "hardProcessNu_eta2/F");
+ myTree_ -> Branch("hardProcessNu_eta3", &hardProcessNu_eta_[2], "hardProcessNu_eta3/F");
+ myTree_ -> Branch("hardProcessNu_eta4", &hardProcessNu_eta_[3], "hardProcessNu_eta4/F");
+
+ myTree_ -> Branch("hardProcessNu_phi1", &hardProcessNu_phi_[0], "hardProcessNu_phi1/F");
+ myTree_ -> Branch("hardProcessNu_phi2", &hardProcessNu_phi_[1], "hardProcessNu_phi2/F");
+ myTree_ -> Branch("hardProcessNu_phi3", &hardProcessNu_phi_[2], "hardProcessNu_phi3/F");
+ myTree_ -> Branch("hardProcessNu_phi4", &hardProcessNu_phi_[3], "hardProcessNu_phi4/F");
+
+ myTree_ -> Branch("hardProcessNu_pdgid1", &hardProcessNu_pdgid_[0], "hardProcessNu_pdgid1/I");
+ myTree_ -> Branch("hardProcessNu_pdgid2", &hardProcessNu_pdgid_[1], "hardProcessNu_pdgid2/I");
+ myTree_ -> Branch("hardProcessNu_pdgid3", &hardProcessNu_pdgid_[2], "hardProcessNu_pdgid3/I");
+ myTree_ -> Branch("hardProcessNu_pdgid4", &hardProcessNu_pdgid_[3], "hardProcessNu_pdgid4/I");
+
  myTree_ -> Branch("nu_lhept1", &nu_lhept_[0], "nu_lhept1/F");
  myTree_ -> Branch("nu_lhept2", &nu_lhept_[1], "nu_lhept2/F");
  myTree_ -> Branch("nu_lheeta1", &nu_lheeta_[0], "nu_lheeta1/F");
@@ -258,8 +354,9 @@ GenDumper::GenDumper(const edm::ParameterSet& iConfig)
  myTree_ -> Branch("nu_lhephi4", &nu_lhephi_[3], "nu_lhephi4/F");
  
  myTree_ -> Branch("std_vector_leptonGen_pt", "std::vector<float>", &_std_vector_leptonGen_pt);
- 
- 
+ myTree_ -> Branch("std_vector_hardProcessLeptonGen_pt", "std::vector<float>", &_std_vector_hardProcessLeptonGen_pt); 
+ myTree_ -> Branch("std_vector_afterFSRLeptonGen_pt", "std::vector<float>", &_std_vector_afterFSRLeptonGen_pt);
+
  myTree_ -> Branch("njet", &njet_, "njet/I");
  myTree_ -> Branch("jetpt1", &jetpt_[0], "jetpt1/F");
  myTree_ -> Branch("jetpt2", &jetpt_[1], "jetpt2/F");
@@ -373,26 +470,50 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 //   }
 //  }
  
- 
+
  _std_vector_leptonGen_pt.clear();
- for (int i=0; i<10; i++) { 
+ for (int i=0; i<10; i++) {
   _std_vector_leptonGen_pt.push_back( -9999.9 );
  }
+ _std_vector_hardProcessLeptonGen_pt.clear();
+ for (int i=0; i<10; i++) {
+  _std_vector_hardProcessLeptonGen_pt.push_back( -9999.9 );
+ }
+ _std_vector_afterFSRLeptonGen_pt.clear();
+ for (int i=0; i<10; i++) {
+  _std_vector_afterFSRLeptonGen_pt.push_back( -9999.9 );
+ }
+
  
  for (int i=0; i<4; i++) {
-  pt_[i]  = 0;
+  pt_[i]  = -999;
   eta_[i]  = -99;
   phi_[i]  = -99;
   pdgid_[i]  = 0;
   status_[i]  = 0;
-  nu_pt_[i]  = 0;
+  nu_pt_[i]  = -999;
   nu_eta_[i]  = -99;
   nu_phi_[i]  = -99;
   nu_pdgid_[i]  = 0;
   nu_status_[i]  = 0;
+  hardProcessLepton_pt_[i]  = -999;
+  hardProcessLepton_eta_[i]  = -99;
+  hardProcessLepton_phi_[i]  = -99;
+  hardProcessLepton_status_[i]  = 0;
+  hardProcessNu_pt_[i]  = -999;
+  hardProcessNu_eta_[i]  = -99;
+  hardProcessNu_phi_[i]  = -99;
+  hardProcessNu_status_[i]  = 0;
+  afterFSRLepton_pt_[i]  = -999;
+  afterFSRLepton_eta_[i]  = -99;
+  afterFSRLepton_phi_[i]  = -99;
+  afterFSRLepton_status_[i]  = 0;
  }
 
-  for (int i=0; i<4; i++) {
+ _mll = -10;
+ hardProcessLepton_mll = -10; 
+
+ for (int i=0; i<4; i++) {
   jetpt_[i]  = 0;
   jeteta_[i] = -99;
   jetphi_[i] = -99;
@@ -420,10 +541,19 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
  }
 
+ std::vector<reco::GenParticle> ptOrderedGenParticles;
+ for (reco::GenParticleCollection::const_iterator genPart = genParticles->begin(); genPart != genParticles->end(); genPart++){
+   ptOrderedGenParticles.push_back(*(genPart->clone()));
+ }
+
+ //---- order genParticles by pT
+ std::sort(ptOrderedGenParticles.begin(), ptOrderedGenParticles.end(), GreaterByPt<reco::GenParticle>());
+ 
+
  //---- gen leptons
  itcount = 0;
  int nu_itcount = 0;
- for (reco::GenParticleCollection::const_iterator genPart = genParticles->begin(); genPart != genParticles->end(); genPart++){
+ for (reco::GenParticleCollection::const_iterator genPart = ptOrderedGenParticles.begin(); genPart != ptOrderedGenParticles.end(); genPart++){
   int id = abs(genPart->pdgId());
   if ((id == 11 || id == 13 || id == 15) && genPart->status()==1) { //---- e/mu/tau
    if (itcount < 10) {
@@ -440,14 +570,22 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //if(genPart->isDirectPromptTauDecayProductFinalState())std::cout << "isDirectPromptTauDecayProductFinalState = " << genPart->isDirectPromptTauDecayProductFinalState() << std::endl;
     //if(genPart->isDirectHardProcessTauDecayProductFinalState())std::cout << "isDirectHardProcessTauDecayProductFinalState = " << genPart->isDirectHardProcessTauDecayProductFinalState() << std::endl;
    
+    if (itcount == 1) {
+     TLorentzVector temp1;
+     temp1.SetPtEtaPhiM(pt_[0], eta_[0], phi_[0], 0);
+     TLorentzVector temp2;
+     temp2.SetPtEtaPhiM(pt_[1], eta_[1], phi_[1], 0);
+     _mll = (temp2 + temp1).M();
+    }
+    
    }
    itcount++;
   }
-  //if (id == 12 || id == 14 || id == 16) { //---- neutrino: e/mu/tau
+
   if ((id == 12 || id == 14 || id == 16) && genPart->status()==1) { //---- neutrino: e/mu/tau
-   //if (nu_itcount < 10) {
-   // _std_vector_leptonGen_pt.at(nu_itcount) = genPart->pt();
-   //}
+   if (nu_itcount < 10) {
+    _std_vector_leptonGen_pt.at(nu_itcount) = genPart->pt();
+   }
    if (nu_itcount < 4) {
     nu_pt_[nu_itcount]    = genPart->pt();
     nu_eta_[nu_itcount]   = genPart->eta();
@@ -457,9 +595,79 @@ void GenDumper::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
    nu_itcount++;
   }
-  //if(genPart->status()==1 && (id < 11 || id > 16) )std::cout << "pdgID = " << genPart->pdgId() << std::endl;
- }
+ } 
+ 
+ //-------- hard process leptons (aka status=3 in pythia 6)
+ itcount = 0;
+ nu_itcount = 0;
+ for (reco::GenParticleCollection::const_iterator genPart = ptOrderedGenParticles.begin(); genPart != ptOrderedGenParticles.end(); genPart++){
+  int id = abs(genPart->pdgId());
+  if ((id == 11 || id == 13 /*|| id == 15*/) && genPart->isHardProcess() ){
+    if (itcount < 10) {
+    _std_vector_hardProcessLeptonGen_pt.at(itcount) = genPart->pt();
+   }
+   if (itcount < 4) {
+    hardProcessLepton_pt_[itcount]    = genPart->pt();
+    hardProcessLepton_eta_[itcount]   = genPart->eta();
+    hardProcessLepton_phi_[itcount]   = genPart->phi();
+    hardProcessLepton_pdgid_[itcount] = genPart->pdgId();
+    hardProcessLepton_status_[itcount] = genPart->status();
+  
+    if (itcount == 1) {
+     TLorentzVector temp1;
+     temp1.SetPtEtaPhiM(hardProcessLepton_pt_[0], hardProcessLepton_eta_[0], hardProcessLepton_phi_[0], 0);
+     TLorentzVector temp2;
+     temp2.SetPtEtaPhiM(hardProcessLepton_pt_[1], hardProcessLepton_eta_[1], hardProcessLepton_phi_[1], 0);
+     hardProcessLepton_mll = (temp2 + temp1).M();
+    }
 
+   }
+   itcount++;
+  }
+  if ((id == 12 || id == 14 || id == 16)  && genPart->isHardProcess() ){
+   if (nu_itcount < 4) {
+    hardProcessNu_pt_[nu_itcount]    = genPart->pt();
+    hardProcessNu_eta_[nu_itcount]   = genPart->eta();
+    hardProcessNu_phi_[nu_itcount]   = genPart->phi();
+    hardProcessNu_pdgid_[nu_itcount] = genPart->pdgId();
+    hardProcessNu_status_[nu_itcount] = genPart->status();
+   }
+   nu_itcount++;
+  }
+ } 
+
+ //------------- After FSR leptons (only e and mu so far)
+ itcount = 0;
+ for (reco::GenParticleCollection::const_iterator genPart = ptOrderedGenParticles.begin(); genPart != ptOrderedGenParticles.end(); genPart++){
+   int id = abs(genPart->pdgId());
+   const reco::Candidate* afterFSRlepton = 0;
+   if ((id == 11 || id == 13 ) && genPart->isHardProcess() ){
+     afterFSRlepton = afterFSRLepton(*genPart);
+     if (afterFSRlepton!=0){
+       while (afterFSRlepton->status() != 1 ){
+         afterFSRlepton = afterFSRLepton(*afterFSRlepton);
+       } 
+       std::cout << "Before FSR: pdgId = " << genPart->pdgId() << " status = " << genPart->status() << " pt = " << genPart->pt() << " eta = " << genPart->eta()  << std::endl;
+       std::cout << "After FSR: pdgId = " << afterFSRlepton->pdgId() << " status = " << afterFSRlepton->status() << " pt = " << afterFSRlepton->pt() << " eta = " << afterFSRlepton->eta() << std::endl;
+     }
+     else afterFSRlepton = &(*genPart);
+
+     if (itcount < 10) {
+       _std_vector_afterFSRLeptonGen_pt.at(itcount) = afterFSRlepton->pt();
+     }
+     if (itcount < 4) {
+       afterFSRLepton_pt_[itcount]    = afterFSRlepton->pt();
+       afterFSRLepton_eta_[itcount]   = afterFSRlepton->eta();
+       afterFSRLepton_phi_[itcount]   = afterFSRlepton->phi();
+       afterFSRLepton_pdgid_[itcount] = afterFSRlepton->pdgId();
+       afterFSRLepton_status_[itcount] = afterFSRlepton->status();
+     }
+     itcount++;
+   } 
+ 
+}
+
+ 
  //---- LHE information ----
 
  for (int i=0; i<4; i++) {
@@ -673,6 +881,18 @@ bool GenDumper::isJetALepton(float phi, float eta, edm::Handle<reco::GenParticle
  return isIt;
 }
 
+const reco::Candidate* GenDumper::afterFSRLepton(const reco::Candidate& cand){
+  const reco::Candidate* daughter = 0;
+  if (cand.numberOfDaughters() == 0 || cand.status()==1) return 0;
+  else{
+    for (unsigned int idau=0; idau<cand.numberOfDaughters(); ++idau){
+      if ( cand.daughter(idau)->pdgId() != cand.pdgId() ) continue;
+      daughter = cand.daughter(idau);
+    }
+    std::cout << "daughter pdgId = " << daughter->pdgId() << " mother pdgId = " << cand.pdgId() << std::endl;
+    return daughter;
+  }
+}
 
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -695,45 +915,49 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
  
  typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
  
- iRun.getByLabel( "externalLHEProducer", run );
- 
- LHERunInfoProduct myLHERunInfoProduct = *(run.product());
- 
- for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
-  std::cout << iter->tag() << std::endl;
-  std::vector<std::string> lines = iter->lines();
-  for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
-   std::cout << lines.at(iLine);
+ if (!(mcLHERunInfoTag_ == edm::InputTag(""))) {
+  
+  
+  iRun.getByLabel( mcLHERunInfoTag_, run );
+  
+  LHERunInfoProduct myLHERunInfoProduct = *(run.product());
+  
+  for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
+   std::cout << iter->tag() << std::endl;
+   std::vector<std::string> lines = iter->lines();
+   for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
+    std::cout << lines.at(iLine);
+   }
   }
+  
+  
+  const lhef::HEPRUP thisHeprup = run->heprup();
+  std::cout << "HEPRUP \n" << std::endl;
+  std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup.IDBMUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.IDBMUP.second << std::endl;
+  std::cout << "EBMUP " << std::setw(14) << std::fixed << thisHeprup.EBMUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.EBMUP.second << std::endl;
+  std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup.PDFGUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.PDFGUP.second << std::endl;
+  std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup.PDFSUP.first;
+  std::cout << std::setw(14) << std::fixed << thisHeprup.PDFSUP.second << std::endl;
+  std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup.IDWTUP << std::endl;
+  std::cout << "NPRUP " << std::setw(14) << std::fixed << thisHeprup.NPRUP << std::endl;
+  std::cout << " XSECUP " << std::setw(14) << std::fixed;
+  std::cout << " XERRUP " << std::setw(14) << std::fixed;
+  std::cout << " XMAXUP " << std::setw(14) << std::fixed;
+  std::cout << " LPRUP " << std::setw(14) << std::fixed << std::endl;
+  for ( unsigned int iSize = 0 ; iSize < thisHeprup.XSECUP.size() ; iSize++ ) {
+   std::cout << std::setw(14) << std::fixed << thisHeprup.XSECUP[iSize];
+   std::cout << std::setw(14) << std::fixed << thisHeprup.XERRUP[iSize];
+   std::cout << std::setw(14) << std::fixed << thisHeprup.XMAXUP[iSize];
+   std::cout << std::setw(14) << std::fixed << thisHeprup.LPRUP[iSize];
+   std::cout << std::endl;
+  }
+  std::cout << " " << std::endl;
+  
+  
  }
- 
- 
- const lhef::HEPRUP thisHeprup_ = run->heprup();
- std::cout << "HEPRUP \n" << std::endl;
- std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.second << std::endl;
- std::cout << "EBMUP " << std::setw(14) << std::fixed << thisHeprup_.EBMUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.EBMUP.second << std::endl;
- std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.second << std::endl;
- std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.first;
- std::cout << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.second << std::endl;
- std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup_.IDWTUP << std::endl;
- std::cout << "NPRUP " << std::setw(14) << std::fixed << thisHeprup_.NPRUP << std::endl;
- std::cout << " XSECUP " << std::setw(14) << std::fixed;
- std::cout << " XERRUP " << std::setw(14) << std::fixed;
- std::cout << " XMAXUP " << std::setw(14) << std::fixed;
- std::cout << " LPRUP " << std::setw(14) << std::fixed << std::endl;
- for ( unsigned int iSize = 0 ; iSize < thisHeprup_.XSECUP.size() ; iSize++ ) {
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.XSECUP[iSize];
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.XERRUP[iSize];
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.XMAXUP[iSize];
-  std::cout << std::setw(14) << std::fixed << thisHeprup_.LPRUP[iSize];
-  std::cout << std::endl;
- }
- std::cout << " " << std::endl;
- 
- 
  
  
 //  edm::Handle< LHEXMLStringProduct > LHEAscii;
@@ -782,16 +1006,6 @@ void GenDumper::beginRun(edm::Run const& iRun, edm::EventSetup const&) {
 //   outfile.close();
 //   ++iout;
 //  }
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
  
  
  

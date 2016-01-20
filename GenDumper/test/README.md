@@ -33,6 +33,15 @@ run on test file:
     
     
     
+    eos cp /eos/cms/store/group/phys_exotica/monoHiggs/step1_WW.root /tmp/amassiro/
+    cmsRun gendumper_cfg.py   inputFiles=file:/tmp/amassiro/step1_WW.root \
+                              outputFile=/tmp/amassiro/WW.root      \
+                              isMiniAod=False  \
+                              mcLHERunInfoTag=""  \
+                              mcLHEEventInfoTag="source"
+    
+    
+    
 Plot:
 
     r99t /tmp/amassiro/HIG-RunIIWinter15GenOnly_dump_tree.root Draw.cxx

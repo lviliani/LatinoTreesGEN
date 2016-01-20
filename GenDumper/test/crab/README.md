@@ -20,6 +20,12 @@ MultiCRAB
 
     python multicrab.py samples/samples_spring15.py
     
+    python multicrab.py crab_projects_2Aug status
+    python multicrab.py crab_projects_2Aug resubmit
+    
+    python multicrab.py crab_projects_11Aug status
+    python multicrab.py crab_projects_11Aug resubmit
+    
     crab status
     
     crab status folder_name
